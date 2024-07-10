@@ -16,7 +16,10 @@ m = 30
 
 # cria malha
 
-X0, Y0 = np.meshgrid(np.linspace(0, L, n), np.linspace(0, H, m))
+x = np.linspace(0, L, n)
+y = np.linspace(0, H, m)
+
+X0, Y0 = np.meshgrid(x, y)
 
 # transpõe as matrizes e cria as matrizes Z, u0, v0, p0
 X = np.transpose(X0)
@@ -46,6 +49,18 @@ for i in range(n):
     if i < 51 and j < 16:
        Z[i, j] = 0
        u0[i, j] = 0
+
+# plotando u0
+plt.figure(figsize=(18, 4))
+plt.pcolormesh(X, Y, np.multiply(u0, Z), cmap='viridis')
+plt.colorbar()
+plt.show()
+
+# plotando p0
+
+plt.figure(figsize=(18, 4))
+plt.pcolormesh(X, Y, np.multiply(p0, Z), cmap='viridis')
+plt.show()
 
 # plota a malha em 3d
 '''fig = plt.figure()
