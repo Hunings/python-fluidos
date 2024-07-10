@@ -37,7 +37,7 @@ u0[0:51, 0:16] = 0
 # condições em t0
 
 u0[0, :] = 8
-p0[0, :] = 10e5
+p0 = 10e5
 v0[0, :] = 0
 
 # perfil parabólico da pressão e condições 
