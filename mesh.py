@@ -29,26 +29,23 @@ u0 = np.zeros((n, m))
 v0 = np.zeros((n, m))
 p0 = np.zeros((n, m))
 
-# loops para condições iniciais
+# degrau
 
-for i in range(n):
-  for j in range(m):
-    if i == 0:
-      u0[i, j] = 8
-      p0[i, j] = 10e5
-      v0[i, j] = 0
-    elif i < 51:
-      u0[i, j] = 23*(Y[i, j] - bfsY)*(H - Y[i, j])
-      v0[i, j] = 0
-      p0[i, j] = 10e5
-    elif i > 50:
-      #u0[i, j] = 4*Y[i, j]*(h - Y[i, j])/h**2 Nowruzi
-      u0[i, j] = 6*Y[i, j]*(H - Y[i, j])
-      v0[i, j] = 0
-      p0[i, j] = 10e5
-    if i < 51 and j < 16:
-       Z[i, j] = 0
-       u0[i, j] = 0
+Z[0:51, 0:16] = 0
+u0[0:51, 0:16] = 0
+
+# condições em t0
+
+u0[0, :] = 8
+p0[0, :] = 10e5
+v0[0, :] = 0
+
+# perfil parabólico da pressão e condições 
+
+u0[1:51, :] = 23*(Y[1:51, :] - bfsY)*(H - Y[1:51, :])
+u0[51:, :] = 6*Y[51:, :]*(H - Y[51:, :])
+
+
 
 # plotando u0
 plt.figure(figsize=(18, 4))
