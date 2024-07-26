@@ -13,6 +13,8 @@ bfsX = 5.163252148997135 # largura exata do degrau no ponto i = 50, j = 15
 # número de colunas e linhas da malha
 n = 350
 m = 30
+dx = L/(n-1)
+dy = H/(m-1)
 
 # cria malha
 
