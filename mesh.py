@@ -24,20 +24,20 @@ X0, Y0 = np.meshgrid(x, y)
 # transpõe as matrizes e cria as matrizes Z, u0, v0, p0
 X = np.transpose(X0)
 Y = np.transpose(Y0)
-Z = np.ones_like(X)
+deg = np.ones_like(X)
 u0 = np.zeros((n, m))
 v0 = np.zeros((n, m))
-p0 = np.zeros((n, m))
+p = np.zeros((n, m))
 
 # degrau
 
-Z[0:51, 0:16] = 0
+deg[0:51, 0:16] = 0
 u0[0:51, 0:16] = 0
 
 # condições em t0
 
 u0[0, :] = 8
-p0 = 10e5
+p[:, :] = 10e5
 v0[0, :] = 0
 
 # perfil parabólico da pressão e condições 
@@ -49,14 +49,34 @@ u0[51:, :] = 6*Y[51:, :]*(H - Y[51:, :])
 
 # plotando u0
 plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, np.multiply(u0, Z), cmap='viridis')
+plt.pcolormesh(X, Y, u0, cmap='viridis')
 plt.colorbar()
 plt.show()
 
-# plotando p0
+# plotando p
 
 plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, np.multiply(p0, Z), cmap='viridis')
+plt.pcolormesh(X, Y, p, cmap='viridis')
+plt.show()
+
+def gauss_seidel(p, f, dy, dx, tol, max_iter):
+  c = 0
+  error = 1.
+  while (error > tol) or c==max_iter:
+      c += 1
+      p_old = np.copy(p)
+      for i in range(1, n-1):
+          for j in range(1, m-1):
+              if deg[i, j] != 0:  # ignora células dentro do degrau
+                  p[i, j] = ((dy**2 * (p[i+1, j] + p[i-1, j]) +
+                              dx**2 * (p[i, j+1] + p[i, j-1]) -
+                              dx**2 * dy**2 * f[i, j]) /
+                            (2 * (dx**2 + dy**2)))
+      error = np.linalg.norm(p - p_old, ord=np.inf)
+gauss_seidel(p, np.zeros_like(p), dx, dy, 1e-6, 1000)
+
+plt.figure(figsize=(18, 4))
+plt.pcolormesh(X, Y, p, cmap='viridis')
 plt.show()
 
 # plota a malha em 3d
