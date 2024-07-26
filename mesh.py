@@ -23,7 +23,7 @@ y = np.linspace(0, H, m)
 
 X0, Y0 = np.meshgrid(x, y)
 
-# transpõe as matrizes e cria as matrizes Z, u0, v0, p0
+# transpõe as matrizes e cria as matrizes deg, u0, v0, p0
 X = np.transpose(X0)
 Y = np.transpose(Y0)
 deg = np.ones_like(X)
@@ -31,10 +31,10 @@ u0 = np.zeros((n, m))
 v0 = np.zeros((n, m))
 p = np.zeros((n, m))
 
-# degrau
+#perfil parabólico da velocidade e condições
 
-deg[0:51, 0:16] = 0
-u0[0:51, 0:16] = 0
+u0[1:51, :] = 23*(Y[1:51, :] - bfsY)*(H - Y[1:51, :])
+u0[51:, :] = 6*Y[51:, :]*(H - Y[51:, :])
 
 # condições em t0
 
@@ -42,12 +42,10 @@ u0[0, :] = 8
 p[:, :] = 10e5
 v0[0, :] = 0
 
-# perfil parabólico da pressão e condições 
+# degrau
 
-u0[1:51, :] = 23*(Y[1:51, :] - bfsY)*(H - Y[1:51, :])
-u0[51:, :] = 6*Y[51:, :]*(H - Y[51:, :])
-
-
+deg[0:51, 0:16] = 0
+u0[0:51, 0:16] = 0
 
 # plotando u0
 plt.figure(figsize=(18, 4))
@@ -58,7 +56,7 @@ plt.show()
 # plotando p
 
 plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, p, cmap='viridis')
+plt.pcolormesh(X, Y, np.multiply(p, deg), cmap='viridis')
 plt.show()
 
 def gauss_seidel(p, f, dy, dx, tol, max_iter):
@@ -75,7 +73,7 @@ def gauss_seidel(p, f, dy, dx, tol, max_iter):
                               dx**2 * dy**2 * f[i, j]) /
                             (2 * (dx**2 + dy**2)))
       error = np.linalg.norm(p - p_old, ord=np.inf)
-gauss_seidel(p, np.zeros_like(p), dx, dy, 1e-6, 1000)
+gauss_seidel(p, np.ones_like(p), dy, dx, 1e-6, 1000)
 
 plt.figure(figsize=(18, 4))
 plt.pcolormesh(X, Y, p, cmap='viridis')
