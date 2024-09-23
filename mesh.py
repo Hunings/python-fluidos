@@ -31,38 +31,30 @@ u0 = np.zeros((n, m))
 v0 = np.zeros((n, m))
 p = np.zeros((n, m))
 
-#perfil parabólico da velocidade e condições
-
-u0[1:51, :] = 23*(Y[1:51, :] - bfsY)*(H - Y[1:51, :])
-u0[51:, :] = 6*Y[51:, :]*(H - Y[51:, :])
-
-# condições em t0
+# condições de contorno
 
 u0[0, :] = 8
-p[:, :] = 10e5
+p[:, :] = 1e5
 v0[0, :] = 0
+u0[:, -1] = 0
+u0[:, 0] = 0
+
+# perfil parabólico da velocidade e condições
+
+u0[1:51, 1:16] = 2*(Y[1:51, 1:16] - bfsY)*(H - Y[1:51, 1:16]) #abaixo do bfs negativo, em cima positivo
+u0[:, :] = 6*Y[:, :]*(H - Y[:, :])
 
 # degrau
 
 deg[0:51, 0:16] = 0
 u0[0:51, 0:16] = 0
 
-# plotando u0
-plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, u0, cmap='viridis')
-plt.colorbar()
-plt.show()
-
-# plotando p
-
-plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, np.multiply(p, deg), cmap='viridis')
-plt.show()
+# gauss seidel
 
 def gauss_seidel(p, f, dy, dx, tol, max_iter):
   c = 0
   error = 1.
-  while (error > tol) or c==max_iter:
+  while (error > tol) and (c < max_iter):
       c += 1
       p_old = np.copy(p)
       for i in range(1, n-1):
@@ -73,19 +65,36 @@ def gauss_seidel(p, f, dy, dx, tol, max_iter):
                               dx**2 * dy**2 * f[i, j]) /
                             (2 * (dx**2 + dy**2)))
       error = np.linalg.norm(p - p_old, ord=np.inf)
-gauss_seidel(p, np.ones_like(p), dy, dx, 1e-6, 1000)
+  print(c)
 
-plt.figure(figsize=(18, 4))
-plt.pcolormesh(X, Y, p, cmap='viridis')
-plt.show()
+#função qualquer 
+gauss_seidel(p=p, f=np.ones_like(p), dy=dy, dx=dx, tol=1e-6, max_iter=100)
+
+# plotando 
+while True:
+  resp = str(input('O que deseja plotar? '))
+  if resp in 'Uu0':
+    plt.figure(figsize=(18, 4))
+    plt.pcolormesh(X, Y, u0, cmap='viridis')
+    plt.colorbar()
+    plt.show()
+    break
+  elif resp in 'pP0':
+    plt.figure(figsize=(18, 4))
+    plt.pcolormesh(X, Y, p, cmap='viridis')
+    plt.colorbar()
+    plt.show()
+    break
+  else:
+     pass
 
 # plota a malha em 3d
-'''fig = plt.figure()
+fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot_wireframe(X, Y, Z, color='black', linewidth=0.5)
+ax.plot_wireframe(X, Y, deg, color='black', linewidth=0.5)
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
 plt.title('Malha computacional')
 plt.scatter(0, 5, c='red', s=0.04)
-plt.show()'''
+plt.show()
