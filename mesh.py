@@ -41,7 +41,6 @@ u0[:, 0] = 0
 
 # perfil parabólico da velocidade e condições
 
-u0[1:51, 1:16] = 2*(Y[1:51, 1:16] - bfsY)*(H - Y[1:51, 1:16]) #abaixo do bfs negativo, em cima positivo
 u0[:, :] = 6*Y[:, :]*(H - Y[:, :])
 
 # degrau
