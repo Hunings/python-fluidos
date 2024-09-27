@@ -3,12 +3,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 H = 2  # altura do tubo
-h = 1.0297 # altura do ressalto
+h = 1.0 # altura do ressalto
 Li = 5*h # largura do ressalto
 L0 = 30*h # largura do tubo depois do ressalto
 L = Li + L0 # largura total
-bfsY = 1.0344827586206897 # altura do degrau exata no ponto i = 0, j = 15
-bfsX = 5.163252148997135 # largura exata do degrau no ponto i = 50, j = 15
 
 # número de colunas e linhas da malha
 n = 350
@@ -31,6 +29,10 @@ u0 = np.zeros((n, m))
 v0 = np.zeros((n, m))
 p = np.zeros((n, m))
 
+# perfil parabólico da velocidade e condições
+
+u0[:, :] = 6*Y[:, :]*(H - Y[:, :])
+
 # condições de contorno
 
 u0[0, :] = 8
@@ -38,10 +40,6 @@ p[:, :] = 1e5
 v0[0, :] = 0
 u0[:, -1] = 0
 u0[:, 0] = 0
-
-# perfil parabólico da velocidade e condições
-
-u0[:, :] = 6*Y[:, :]*(H - Y[:, :])
 
 # degrau
 
@@ -97,3 +95,4 @@ ax.set_zlabel('z')
 plt.title('Malha computacional')
 plt.scatter(0, 5, c='red', s=0.04)
 plt.show()
+print(dx, dy)
