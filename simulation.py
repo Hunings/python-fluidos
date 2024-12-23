@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 H = 2  # altura do tubo
-h = 1.0 # altura do ressalto
+h = 1.0297 # altura do ressalto
 Li = 5*h # largura do ressalto
 L0 = 30*h # largura do tubo depois do ressalto
 L = Li + L0 # largura total
@@ -25,26 +25,26 @@ X0, Y0 = np.meshgrid(x, y)
 X = np.transpose(X0)
 Y = np.transpose(Y0)
 deg = np.ones_like(X)
-u0 = np.zeros((n, m))
-v0 = np.zeros((n, m))
+u = np.zeros((n, m))
+v = np.zeros((n, m))
 p = np.zeros((n, m))
-
-# perfil parabólico da velocidade e condições
-
-u0[:, :] = 6*Y[:, :]*(H - Y[:, :])
 
 # condições de contorno
 
-u0[0, 15:-1] = 8
+u[0, :] = 8
 p[:, :] = 1e5
-v0[0, :] = 0
-u0[:, -1] = 0
-u0[:, 0] = 0
+v[0, :] = 0
+u[:, -1] = 0
+u[:, 0] = 0
+
+# perfil parabólico da velocidade e condições
+
+u[:, :] = 6*Y[:, :]*(H - Y[:, :])
 
 # degrau
 
-deg[0:51+1, 0:16+1] = 0
-u0[0:51+1, 0:16+1] = 0
+deg[0:51, 0:16] = 0
+u[0:51, 0:16] = 0
 
 # gauss seidel
 
@@ -54,25 +54,26 @@ def gauss_seidel(p, f, dy, dx, tol, max_iter):
   while (error > tol) and (c < max_iter):
       c += 1
       p_old = np.copy(p)
-      for i in range(1, n-1):
-          for j in range(1, m-1):
+      for i in range(1, n-):
+          for j in range(1, m-):
               if deg[i, j] != 0:  # ignora células dentro do degrau
                   p[i, j] = ((dy**2 * (p[i+1, j] + p[i-1, j]) +
                               dx**2 * (p[i, j+1] + p[i, j-1]) -
                               dx**2 * dy**2 * f[i, j]) /
                             (2 * (dx**2 + dy**2)))
       error = np.linalg.norm(p - p_old, ord=np.inf)
-  print(c)
+  print(c, error)
 
 #função qualquer 
-gauss_seidel(p=p, f=np.ones_like(p), dy=dy, dx=dx, tol=1e-6, max_iter=100)
+gauss_seidel(p=p, f=np.ones_like(p), dy=dy, dx=dx, tol=1e-4, max_iter=5)
+
 
 # plotando 
 while True:
   resp = str(input('O que deseja plotar? '))
   if resp in 'Uu0':
     plt.figure(figsize=(18, 4))
-    plt.pcolormesh(X, Y, u0, cmap='viridis')
+    plt.pcolormesh(X, Y, u, cmap='viridis')
     plt.colorbar()
     plt.show()
     break
