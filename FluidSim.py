@@ -42,14 +42,6 @@ def derivada_segunda(campo, dx, dy):
   d2cdx2[1:-1, 1:-1] = (campo[2:, 1:-1] -2*campo[1:-1, 1:-1] + campo[:-2, 1:-1]) / dx**2
   d2cdy2[1:-1, 1:-1] = (campo[1:-1, 2:] - 2*campo[1:-1, 1:-1] + campo[1:-1, :-2]) / dy**2
   return d2cdx2, d2cdy2
- 
-    u[0, :] = 1.0  
-    u[-1, :] = u[-2, :]  
-    u[:, 0] = 0.0  
-    u[:, -1] = 0.0  
-   
-   
-
 
 def F(u):
   dudx, dudy = derivada_central(u, dx, dy)
