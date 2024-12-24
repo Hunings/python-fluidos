@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 
 altura = 10.
 comprimento = 10.
-nx = 10
-ny = 10
+nx = 5
+ny = 5
 dx = comprimento / nx
 dy = altura / ny
-Re = 1e-6
-N_p = 100000
-dt = 0.0001
+Re = 1e-4
+N_p = 100000000
+dt = 0.001
 tol = 1e-12
 t_final = 1
 
@@ -24,8 +24,8 @@ Y = np.transpose(Y)
 
 # arrays iniciais
 
-u0 = 5*np.ones((nx, ny))
-v0 = 1*np.ones((nx, ny))
+u0 = 1*np.ones((nx, ny))
+v0 = 0*np.ones((nx, ny))
 
 p0 = 1*np.ones((nx, ny))
 
@@ -43,15 +43,19 @@ def derivada_segunda(campo, dx, dy):
   d2cdy2[1:-1, 1:-1] = (campo[1:-1, 2:] - 2*campo[1:-1, 1:-1] + campo[1:-1, :-2]) / dy**2
   return d2cdx2, d2cdy2
 
-def F(u):
+def F(u, v):
   dudx, dudy = derivada_central(u, dx, dy)
   d2udx2, d2udy2 = derivada_segunda(u, dx, dy)
-  return u + dt * (1/Re * (d2udx2 + d2udy2))
+  du2dx, _ = derivada_central(u**2, dx, dy)
+  _, duvdy = derivada_central(u*v, dx, dy)
+  return u + dt * (1/Re * (d2udx2 + d2udy2) - du2dx - duvdy)
 
-def G(v):
+def G(u, v):
   dvdx, dvdy = derivada_central(v, dx, dy)
   d2vdx2, d2vdy2 = derivada_segunda(v, dx, dy)
-  return v + dt * (1/Re * (d2vdx2 + d2vdy2))
+  _, dv2dy = derivada_central(v**2, dx, dy)
+  duvdx, _ = derivada_segunda(u*v, dx, dy)
+  return v + dt * (1/Re * (d2vdx2 + d2vdy2) - duvdx - dv2dy)
 
 def f(F, G):
   dFdx, _ = derivada_central(F, dx, dy)
@@ -62,8 +66,8 @@ def pressao(u, v, p): # essa função vai dentro do step depois. por quê?
   c = 0
   erro = 1
   erros = np.array([])
-  F_ = F(u)
-  G_ = G(v)
+  F_ = F(u, v)
+  G_ = G(u, v)
   fonte = f(F_, G_)[1:-1, 1:-1]
   while (erro > tol) and (c < N_p):
       c += 1
@@ -90,12 +94,14 @@ def pressao(u, v, p): # essa função vai dentro do step depois. por quê?
 def passo(u, v, p):
   p_next = pressao(u, v, p) # itera e calcula a próxima pressão, com cc já
   dpdx, dpdy = derivada_central(p_next, dx, dy)
-  u_next = F(u) - dt*dpdx
-  v_next = G(v) - dt*dpdy
+  u_next = F(u, v) - dt*dpdx
+  v_next = G(u, v) - dt*dpdy
+
   u_next[0, :] = 1.0  
   u_next[-1, :] = u_next[-2, :]  
   u_next[:, 0] = 0.0  
   u_next[:, -1] = 0.0  
+  
   v_next[0, :] = 0.0
   v_next[-1, :] = v_next[-2, :]  
   v_next[:, 0] = 0.0
@@ -125,8 +131,8 @@ def init(u, v, p, t_final):
     n += 1
   return
 
-p = pressao(u0, v0, p0)
-plt.pcolormesh(X, Y, p)
+p_ = pressao(u0, v0, p0)
+plt.pcolormesh(X, Y, p_)
 plt.colorbar()
 plt.show()
 init(u0, v0, p0, t_final)
