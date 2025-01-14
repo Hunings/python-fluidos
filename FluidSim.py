@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 
 altura = 10.
 comprimento = 10.
-nx = 5
-ny = 5
+nx = 10
+ny = 10
 dx = comprimento / nx
 dy = altura / ny
-Re = 1e-4
-N_p = 100000000
+Re = 1e-2
+N_p = 10000
 dt = 0.001
 tol = 1e-12
-t_final = 1
+t_final = 400*dt
 
 x = np.linspace(0, comprimento, nx)
 y = np.linspace(0, altura, ny)
@@ -26,7 +26,6 @@ Y = np.transpose(Y)
 
 u0 = 1*np.ones((nx, ny))
 v0 = 0*np.ones((nx, ny))
-
 p0 = 1*np.ones((nx, ny))
 
 def derivada_central(campo, dx, dy):
@@ -46,14 +45,14 @@ def derivada_segunda(campo, dx, dy):
 def F(u, v):
   dudx, dudy = derivada_central(u, dx, dy)
   d2udx2, d2udy2 = derivada_segunda(u, dx, dy)
-  du2dx, _ = derivada_central(u**2, dx, dy)
+  du2dx, _ = derivada_central(u**2, dx, dy) # termos não lineares
   _, duvdy = derivada_central(u*v, dx, dy)
   return u + dt * (1/Re * (d2udx2 + d2udy2) - du2dx - duvdy)
 
 def G(u, v):
   dvdx, dvdy = derivada_central(v, dx, dy)
   d2vdx2, d2vdy2 = derivada_segunda(v, dx, dy)
-  _, dv2dy = derivada_central(v**2, dx, dy)
+  _, dv2dy = derivada_central(v**2, dx, dy) # termos não lineares
   duvdx, _ = derivada_segunda(u*v, dx, dy)
   return v + dt * (1/Re * (d2vdx2 + d2vdy2) - duvdx - dv2dy)
 
@@ -62,7 +61,7 @@ def f(F, G):
   _, dGdy = derivada_central(G, dx, dy)
   return (dFdx + dGdy)*dt
 
-def pressao(u, v, p): # essa função vai dentro do step depois. por quê?
+def pressao(u, v, p):
   c = 0
   erro = 1
   erros = np.array([])
@@ -85,9 +84,9 @@ def pressao(u, v, p): # essa função vai dentro do step depois. por quê?
           )
       erro = np.linalg.norm(p - p_old, ord=np.inf)
       erros = np.append(erros, erro)
-      p[-1, :] = 0 #p[-2, :] 
-      p[:, -1] = 0 #p[:, -2] 
-      p[:, 0] = 0 #p[:, 1]  
+      p[-1, :] = 0 #p[-2, :]
+      p[:, -1] = 0 #p[:, -2]
+      p[:, 0] = 0 #p[:, 1]
       p[0, :] = 0 #p[1, :]
   return p
 
@@ -97,38 +96,46 @@ def passo(u, v, p):
   u_next = F(u, v) - dt*dpdx
   v_next = G(u, v) - dt*dpdy
 
-  u_next[0, :] = 1.0  
-  u_next[-1, :] = u_next[-2, :]  
-  u_next[:, 0] = 0.0  
-  u_next[:, -1] = 0.0  
-  
+  u_next[0, :] = 1.0
+  u_next[-1, :] = u_next[-2, :]
+  u_next[:, 0] = 0.0
+  u_next[:, -1] = 0.0
+
   v_next[0, :] = 0.0
-  v_next[-1, :] = v_next[-2, :]  
+  v_next[-1, :] = v_next[-2, :]
   v_next[:, 0] = 0.0
   v_next[:, -1] = 0.0
-  return u_next, v_next, p_next 
+  return u_next, v_next, p_next
 
 def init(u, v, p, t_final):
   n = 0
   t = 0
   while t < t_final:
     u_next, v_next, p_next  = passo(u, v, p)
-    if n < 10:
-      plt.contourf(X, Y, p_next)
-      plt.colorbar()
-      plt.title('p')
-      plt.show()
-      plt.contourf(X, Y, u_next)
-      plt.title('u')
-      plt.colorbar()
-      plt.show()
-      plt.title('v')
-      plt.contourf(X, Y, u_next)
-      plt.colorbar()
-      plt.show()
-    u, v, p = p_next, u_next, v_next
+    u, v, p = u_next, v_next, p_next
     t += dt
     n += 1
+
+  plt.contourf(X, Y, p_next)
+  plt.quiver(X, Y, u, v)
+  plt.colorbar()
+  plt.title('p')
+  plt.show()
+
+  plt.contourf(X, Y, u_next)
+  plt.title('u')
+  plt.colorbar()
+  plt.show()
+
+  plt.title('v')
+  plt.contourf(X, Y, v_next)
+  plt.colorbar()
+  plt.show()
+
+  plt.title('Vetores')
+  plt.quiver(X, Y, u, v)
+  plt.show()
+
   return
 
 p_ = pressao(u0, v0, p0)
