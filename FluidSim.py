@@ -84,10 +84,10 @@ def pressao(u, v, p):
           )
       erro = np.linalg.norm(p - p_old, ord=np.inf)
       erros = np.append(erros, erro)
-      p[-1, :] = 0 #p[-2, :]
-      p[:, -1] = 0 #p[:, -2]
-      p[:, 0] = 0 #p[:, 1]
-      p[0, :] = 0 #p[1, :]
+      p[-1, :] = p[-2, :]
+      p[:, -1] = p[:, -2]
+      p[:, 0] = p[:, 1]
+      p[0, :] = p[1, :]
   return p
 
 def passo(u, v, p):
@@ -139,7 +139,7 @@ def init(u, v, p, t_final):
   return
 
 p_ = pressao(u0, v0, p0)
-plt.pcolormesh(X, Y, p_)
+plt.contourf(X, Y, p_)
 plt.colorbar()
 plt.show()
 init(u0, v0, p0, t_final)
