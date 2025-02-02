@@ -3,17 +3,17 @@ import matplotlib.pyplot as plt
 
 #variáveis globais
 
-altura = 10.
-comprimento = 10.
-nx = 10
-ny = 10
+altura = 1
+comprimento = 10
+nx = 50
+ny = 5
 dx = comprimento / nx
 dy = altura / ny
-Re = 1
+Re = 100
 N_p = 10000
-dt = 0.001
-tol = 1e-6
-t_final = 1
+dt = 1e-5
+tol = 1e-8
+t_final = 3000*dt
 
 x = np.linspace(0, comprimento, nx)
 y = np.linspace(0, altura, ny)
@@ -42,24 +42,34 @@ def derivada_segunda(campo, dx, dy):
   d2cdy2[1:-1, 1:-1] = (campo[1:-1, 2:] - 2*campo[1:-1, 1:-1] + campo[1:-1, :-2]) / dy**2
   return d2cdx2, d2cdy2 
 
-def F(u, v):
-  dudx, dudy = derivada_central(u, dx, dy)
-  d2udx2, d2udy2 = derivada_segunda(u, dx, dy)
-  du2dx, _ = derivada_central(u**2, dx, dy) # termos não lineares
-  _, duvdy = derivada_central(u*v, dx, dy) 
+def convecF(u, v):
+  du2dx = np.zeros_like(u)
+  duvdy = np.zeros_like(u)
+  du2dx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[2:, 1:-1])**2 / 2 - (u[:-2, 1:-1] + u[1:-1, 1:-1])**2 /2)
+  duvdy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])*(u[1:-1, 1:-1] + u[1:-1, 2:])/4 - (v[1:-1, :-2] + v[2:, :-2])*(u[1:-1, :-2] + u[1:-1, 1:-1])/4)
+  return du2dx + duvdy
 
-  convectivo = du2dx + duvdy
+# duas funções ou apenas uma?
+
+def convecG(u, v):
+  dv2dy = np.zeros_like(v)
+  duvdx = np.zeros_like(u)
+  dv2dy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])**2 / 2 - (v[:-2, 1:-1] + v[1:-1, 1:-1])**2 /2)
+  duvdx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[1:-1, 2:])*(v[1:-1, 1:-1] + v[2:, 1:-1])/4 - (u[:-2, 1:-1] + u[:-2, 2:])*(v[:-2, 1:-1] + v[1:-1, 1:-1])/4)
+  return dv2dy + duvdx
+
+def F(u, v):
+  d2udx2, d2udy2 = derivada_segunda(u, dx, dy)
+
+  convectivo = convecF(u, v)
   difusivo = 1/Re * (d2udx2 + d2udy2)
 
   return u + dt * (difusivo - convectivo)
 
 def G(u, v):
-  dvdx, dvdy = derivada_central(v, dx, dy)
   d2vdx2, d2vdy2 = derivada_segunda(v, dx, dy)
-  _, dv2dy = derivada_central(v**2, dx, dy) # termos não lineares
-  duvdx, _ = derivada_segunda(u*v, dx, dy)
 
-  convectivo = duvdx + dv2dy
+  convectivo = convecG(u, v)
   difusivo = 1/Re * (d2vdx2 + d2vdy2)
 
   return v + dt * (difusivo - convectivo)
@@ -76,9 +86,9 @@ def pressao(u, v, p):
   F_ = F(u, v) # 
   G_ = G(u, v)
   fonte = f(F_, G_)[1:-1, 1:-1] # será melhor retornar a matriz certa na função?
-  while (erro > tol) and (c < N_p):
+  while (erro > tol):
       c += 1
-      p_old = np.copy(p)
+      p_old = np.copy(p) # ver se não tem melhor forma de fazer isso
       p[1:-1, 1:-1] = (
           (
               dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1])
@@ -92,14 +102,14 @@ def pressao(u, v, p):
           )
       erro = np.linalg.norm(p - p_old, ord=np.inf)
       erros = np.append(erros, erro)
-      p[-1, :] = 0 #p[-2, :] 
-      p[:, -1] = 0 #p[:, -2] 
-      p[:, 0] = 0 #p[:, 1]  
-      p[0, :] = 0 #p[1, :]
+      p[-1, :] = p[-2, :] 
+      p[:, -1] = p[:, -2] 
+      p[:, 0] = p[:, 1]  
+      p[0, :] = p[1, :]
   return p
 
 def passo(u, v, p):
-  p_next = pressao(u, v, p) # itera e calcula a próxima pressão, com cc já
+  p_next = pressao(u, v, p)
   dpdx, dpdy = derivada_central(p_next, dx, dy)
 
   F_ = F(u, v)
@@ -108,41 +118,53 @@ def passo(u, v, p):
   u_next = F_ - dt*dpdx
   v_next = G_ - dt*dpdy
 
-  u_next[0, :] = 1.0 
-  u_next[-1, :] = u_next[-2, :]  
-  u_next[:, 0] = 0.0  
-  u_next[:, -1] = 0.0  
-  
-  v_next[0, :] = 0.0
-  v_next[-1, :] = v_next[-2, :]  
+  u_next[:, 0] = 0.0
+  u_next[:, -1] = 0.0
+  u_next[-1, :] = u_next[-2, :]
+  u_next[0, :] = 1
+
   v_next[:, 0] = 0.0
   v_next[:, -1] = 0.0
+  v_next[0, :] = 0
+  v_next[-1, :] = v_next[-2, :]
+  
   return u_next, v_next, p_next 
-
-#pseudo 
 
 def init(u, v, p, t_final):
   n = 0
   t = 0
+  c = 0
   while t < t_final:
     u_next, v_next, p_next  = passo(u, v, p)
-    if n < 10:
-      plt.contourf(X, Y, p_next)
-      plt.colorbar()
-      plt.title('p')
-      plt.show()
-      plt.contourf(X, Y, u_next)
-      plt.title('u')
-      plt.colorbar()
-      plt.show()
-      plt.title('v')
-      plt.contourf(X, Y, u_next)
-      plt.colorbar()
-      plt.show()
-    u, v, p = p_next, u_next, v_next
+    if np.linalg.norm(u-u_next, ord=np.inf) < 1e-12:
+      print(f"Convergiu sem mudar {c} vezes ")
+      c+=1
+      if c==5:
+        break
+    u, v, p = u_next, v_next, p_next
     t += dt
     n += 1
-  return
+
+  plt.contourf(X, Y, p)
+  plt.colorbar()
+  plt.title('p')
+  plt.show()
+
+  plt.contourf(X, Y, u)
+  plt.title('u')
+  plt.colorbar()
+  plt.show()
+
+  plt.title('v')
+  plt.contourf(X, Y, v)
+  plt.colorbar()
+  plt.show()
+
+  plt.title('Vetores')
+  plt.quiver(X, Y, u, v)
+  plt.show()
+  
+  return u_next, v_next, p_next
 
 p_ = pressao(u0, v0, p0)
 plt.pcolormesh(X, Y, p_)
