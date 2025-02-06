@@ -3,17 +3,20 @@ import matplotlib.pyplot as plt
 
 #variáveis globais
 
-altura = 1
-comprimento = 10
-nx = 50
-ny = 5
+altura = 100
+comprimento = 100
+nx = 20
+ny = 20
 dx = comprimento / nx
 dy = altura / ny
 Re = 100
 N_p = 10000
-dt = 1e-5
-tol = 1e-8
-t_final = 3000*dt
+tol = 1e-4
+u_max = 1.5
+v_max = 1.5
+tau = 0.3
+dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
+t_final = 100*dt
 
 x = np.linspace(0, comprimento, nx)
 y = np.linspace(0, altura, ny)
@@ -40,7 +43,7 @@ def derivada_segunda(campo, dx, dy):
   d2cdy2 = np.zeros_like(campo)
   d2cdx2[1:-1, 1:-1] = (campo[2:, 1:-1] -2*campo[1:-1, 1:-1] + campo[:-2, 1:-1]) / dx**2
   d2cdy2[1:-1, 1:-1] = (campo[1:-1, 2:] - 2*campo[1:-1, 1:-1] + campo[1:-1, :-2]) / dy**2
-  return d2cdx2, d2cdy2 
+  return d2cdx2, d2cdy2
 
 def convecF(u, v):
   du2dx = np.zeros_like(u)
@@ -72,7 +75,7 @@ def G(u, v):
   convectivo = convecG(u, v)
   difusivo = 1/Re * (d2vdx2 + d2vdy2)
 
-  return v + dt * (difusivo - convectivo)
+  return (v + dt * (difusivo - convectivo))
 
 def f(F, G):
   dFdx, _ = derivada_central(F, dx, dy)
@@ -82,13 +85,13 @@ def f(F, G):
 def pressao(u, v, p):
   c = 0
   erro = 1
-  erros = np.array([])
-  F_ = F(u, v) # 
+  F_ = F(u, v)
   G_ = G(u, v)
   fonte = f(F_, G_)[1:-1, 1:-1] # será melhor retornar a matriz certa na função?
-  while (erro > tol):
+
+  while erro > tol and c < N_p:
       c += 1
-      p_old = np.copy(p) # ver se não tem melhor forma de fazer isso
+      p_old = np.copy(p)
       p[1:-1, 1:-1] = (
           (
               dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1])
@@ -100,12 +103,13 @@ def pressao(u, v, p):
           /
           (2 * (dx**2 + dy**2))
           )
-      erro = np.linalg.norm(p - p_old, ord=np.inf)
-      erros = np.append(erros, erro)
-      p[-1, :] = p[-2, :] 
-      p[:, -1] = p[:, -2] 
-      p[:, 0] = p[:, 1]  
-      p[0, :] = p[1, :]
+      p[-1, :] = p[-2, :]
+      p[:, -1] = p[:, -2]
+      p[:, 0] = p[:, 1]
+      p[0, :] = p[1, :] # deve ser antes do erro
+
+      erro = np.linalg.norm(p - p_old, ord=np.inf) / np.linalg.norm(p)
+      print("Diferença p: ", erro)
   return p
 
 def passo(u, v, p):
@@ -127,8 +131,8 @@ def passo(u, v, p):
   v_next[:, -1] = 0.0
   v_next[0, :] = 0
   v_next[-1, :] = v_next[-2, :]
-  
-  return u_next, v_next, p_next 
+
+  return u_next, v_next, p_next
 
 def init(u, v, p, t_final):
   n = 0
@@ -136,19 +140,9 @@ def init(u, v, p, t_final):
   c = 0
   while t < t_final:
     u_next, v_next, p_next  = passo(u, v, p)
-    if np.linalg.norm(u-u_next, ord=np.inf) < 1e-12:
-      print(f"Convergiu sem mudar {c} vezes ")
-      c+=1
-      if c==5:
-        break
     u, v, p = u_next, v_next, p_next
     t += dt
     n += 1
-
-  plt.contourf(X, Y, p)
-  plt.colorbar()
-  plt.title('p')
-  plt.show()
 
   plt.contourf(X, Y, u)
   plt.title('u')
@@ -163,8 +157,7 @@ def init(u, v, p, t_final):
   plt.title('Vetores')
   plt.quiver(X, Y, u, v)
   plt.show()
-  
-  return u_next, v_next, p_next
+  return
 
 p_ = pressao(u0, v0, p0)
 plt.pcolormesh(X, Y, p_)
