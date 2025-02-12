@@ -3,20 +3,25 @@ import matplotlib.pyplot as plt
 
 #variáveis globais
 
-altura = 100
+altura = 50
 comprimento = 100
-nx = 20
-ny = 20
+ppr = 3
+altura_ressalto = int(ppr/10 * altura)
+comprimento_ressalto = int(ppr/10 * comprimento)
+nx = 100
+ny = 50
+nr = int(ppr*ny/10)
 dx = comprimento / nx
 dy = altura / ny
-Re = 100
+Re = 1
 N_p = 10000
 tol = 1e-4
-u_max = 1.5
-v_max = 1.5
-tau = 0.3
+u_max = 2
+v_max = 2
+tau = 0.1
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
-t_final = 100*dt
+t_final = 10000*dt
+plotar = int(1/dt)
 
 x = np.linspace(0, comprimento, nx)
 y = np.linspace(0, altura, ny)
@@ -108,6 +113,11 @@ def pressao(u, v, p):
       p[:, 0] = p[:, 1]
       p[0, :] = p[1, :] # deve ser antes do erro
 
+      # BFS
+      p[:nr, :nr] = np.pi
+      p[nr, :nr] = p[nr+1, :nr]
+      p[:nr, nr] = p[:nr, nr+1]
+
       erro = np.linalg.norm(p - p_old, ord=np.inf) / np.linalg.norm(p)
       print("Diferença p: ", erro)
   return p
@@ -125,42 +135,77 @@ def passo(u, v, p):
   u_next[:, 0] = 0.0
   u_next[:, -1] = 0.0
   u_next[-1, :] = u_next[-2, :]
-  u_next[0, :] = 1
 
-  v_next[:, 0] = 0.0
-  v_next[:, -1] = 0.0
-  v_next[0, :] = 0
+  # Entrada x
+  u_next[0, nr:] = 1
+  u_next[:nr, :nr] = 0
+
+  v_next[:, 0] = 0
+  v_next[:, -1] = 0
   v_next[-1, :] = v_next[-2, :]
 
+  # Entrada y
+
+  v_next[0, :] = 0
+  v_next[:nr, :nr] = 0
   return u_next, v_next, p_next
 
-def init(u, v, p, t_final):
+def rodar(u, v, p, t_final):
   n = 0
   t = 0
-  c = 0
-  while t < t_final:
-    u_next, v_next, p_next  = passo(u, v, p)
-    u, v, p = u_next, v_next, p_next
-    t += dt
-    n += 1
+  it = 0
+  q = int(input('Mostrar animação? 1/0'))
+  if q == 1:
+    while t < t_final:
+      u_next, v_next, p_next  = passo(u, v, p)
+      u, v, p = u_next, v_next, p_next
+      V = (u**2 + v**2)**0.5
+      t += dt
+      n += 1
+      it += 1
+      print(it)
+      print(t)
+      if it % plotar == 0:
+          plt.contourf(X, Y, V)
+          plt.colorbar()
+          plt.title('Módulo da velocidade')
 
-  plt.contourf(X, Y, u)
-  plt.title('u')
-  plt.colorbar()
-  plt.show()
+          plt.quiver(X, Y, u, v, alpha=0.5)
 
-  plt.title('v')
-  plt.contourf(X, Y, v)
-  plt.colorbar()
-  plt.show()
+          plt.draw()
+          plt.pause(0.05)
+          plt.clf()
+  else:
+    while t < t_final:
+      u_next, v_next, p_next  = passo(u, v, p)
+      u, v, p = u_next, v_next, p_next
+      V = (u**2 + v**2)**0.5
+      t += dt
+      n += 1
+    plt.contourf(X, Y, u)
+    plt.title('u')
+    plt.colorbar()
+    plt.show()
 
-  plt.title('Vetores')
-  plt.quiver(X, Y, u, v)
-  plt.show()
-  return
+    plt.contourf(X, Y, p)
+    plt.title('p')
+    plt.colorbar()
+    plt.show()
+    
+    plt.contourf(X, Y, V)
+    plt.title('Módulo da velocidade')
+    plt.colorbar()
+    plt.show()
+    
+    plt.title('v')
+    plt.contourf(X, Y, v)
+    plt.colorbar()
+    plt.show()
 
-p_ = pressao(u0, v0, p0)
-plt.pcolormesh(X, Y, p_)
-plt.colorbar()
-plt.show()
-init(u0, v0, p0, t_final)
+    plt.title('Vetores')
+    plt.quiver(X, Y, u, v)
+    plt.show()
+  print('dt = ', dt)
+  print(plotar)
+  return u, v, p
+rodar(u0, v0, p0, t_final)
