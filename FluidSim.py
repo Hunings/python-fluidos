@@ -4,23 +4,23 @@ import matplotlib.pyplot as plt
 #variáveis globais
 
 altura = 50
-comprimento = 100
+comprimento = 50
 ppr = 3
 altura_ressalto = int(ppr/10 * altura)
 comprimento_ressalto = int(ppr/10 * comprimento)
-nx = 100
+nx = 50
 ny = 50
 nr = int(ppr*ny/10)
 dx = comprimento / nx
 dy = altura / ny
 Re = 1
 N_p = 10000
-tol = 1e-4
+tol = 1e-3
 u_max = 2
 v_max = 2
-tau = 0.1
+tau = 0.008
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
-t_final = 10000*dt
+t_final = 100000*dt
 plotar = int(1/dt)
 
 x = np.linspace(0, comprimento, nx)
@@ -34,7 +34,7 @@ Y = np.transpose(Y)
 
 u0 = 1*np.ones((nx, ny))
 v0 = 0*np.ones((nx, ny))
-p0 = 1*np.ones((nx, ny))
+p0 = 0*np.ones((nx, ny))
 
 def derivada_central(campo, dx, dy):
     dcdx = np.zeros_like(campo)
@@ -72,7 +72,9 @@ def F(u, v):
   convectivo = convecF(u, v)
   difusivo = 1/Re * (d2udx2 + d2udy2)
 
-  return u + dt * (difusivo - convectivo)
+  u_corrigido = u + dt * (difusivo - convectivo)
+
+  return u_corrigido
 
 def G(u, v):
   d2vdx2, d2vdy2 = derivada_segunda(v, dx, dy)
@@ -80,7 +82,9 @@ def G(u, v):
   convectivo = convecG(u, v)
   difusivo = 1/Re * (d2vdx2 + d2vdy2)
 
-  return (v + dt * (difusivo - convectivo))
+  v_corrigido = v + dt * (difusivo - convectivo)
+
+  return v_corrigido
 
 def f(F, G):
   dFdx, _ = derivada_central(F, dx, dy)
@@ -115,8 +119,8 @@ def pressao(u, v, p):
 
       # BFS
       p[:nr, :nr] = np.pi
-      p[nr, :nr] = p[nr+1, :nr]
-      p[:nr, nr] = p[:nr, nr+1]
+      p[nr+1, :nr] = p[nr+2, :nr]
+      p[:nr, nr+1] = p[:nr, nr+2]
 
       erro = np.linalg.norm(p - p_old, ord=np.inf) / np.linalg.norm(p)
       print("Diferença p: ", erro)
@@ -137,7 +141,7 @@ def passo(u, v, p):
   u_next[-1, :] = u_next[-2, :]
 
   # Entrada x
-  u_next[0, nr:] = 1
+  u_next[0, nr+1:] = 1
   u_next[:nr, :nr] = 0
 
   v_next[:, 0] = 0
@@ -146,7 +150,7 @@ def passo(u, v, p):
 
   # Entrada y
 
-  v_next[0, :] = 0
+  v_next[0, nr+1:] = 0
   v_next[:nr, :nr] = 0
   return u_next, v_next, p_next
 
