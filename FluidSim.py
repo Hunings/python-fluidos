@@ -1,27 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 #variáveis globais
 
 altura = 50
-comprimento = 50
-ppr = 3
-altura_ressalto = int(ppr/10 * altura)
-comprimento_ressalto = int(ppr/10 * comprimento)
-nx = 50
+comprimento = 100
+altura_ressalto = int(3/10 * altura)
+comprimento_ressalto = int(3/10 * comprimento)
+nx = 100
 ny = 50
-nr = int(ppr*ny/10)
+nr = int(3*ny/10)
 dx = comprimento / nx
 dy = altura / ny
-Re = 1
+Re = 10
 N_p = 10000
-tol = 1e-3
-u_max = 2
+tol = 1e-4
+u_max = 2	
 v_max = 2
-tau = 0.008
+tau = 0.2
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
-t_final = 100000*dt
 plotar = int(1/dt)
+t_final = 1000000*dt
 
 x = np.linspace(0, comprimento, nx)
 y = np.linspace(0, altura, ny)
@@ -32,9 +32,9 @@ Y = np.transpose(Y)
 
 # arrays iniciais
 
-u0 = 1*np.ones((nx, ny))
+u0 = -1*np.ones((nx, ny))
 v0 = 0*np.ones((nx, ny))
-p0 = 0*np.ones((nx, ny))
+p0 = 1*np.ones((nx, ny))
 
 def derivada_central(campo, dx, dy):
     dcdx = np.zeros_like(campo)
@@ -42,6 +42,17 @@ def derivada_central(campo, dx, dy):
     dcdx[1:-1, 1:-1] = (campo[2:, 1:-1] - campo[:-2, 1:-1]) / (2 * dx)
     dcdy[1:-1, 1:-1] = (campo[1:-1, 2:] - campo[1:-1, :-2]) / (2 * dy)
     return dcdx, dcdy
+
+def upwind_x(u, dx):
+    dudx = np.zeros_like(u)
+    dudx[1:-1, 1:-1] = (np.where(u[1:-1, 1:-1] > 0, (u[1:-1, 1:-1] - u[:-2, 1:-1]) / dx, (u[2:, 1:-1] - u[1:-1, 1:-1]) / dx))
+    return dudx
+
+def upwind_y(v, dy):
+    dvdy = np.zeros_like(v)
+    dvdy[1:-1, 1:-1] = (np.where(v[1:-1, 1:-1] > 0, (v[1:-1, 1:-1] - v[1:-1, :-2]) / dy, (v[1:-1, 2:] - v[1:-1, 1:-1]) / dy))
+    return dvdy
+
 
 def derivada_segunda(campo, dx, dy):
   d2cdx2 = np.zeros_like(campo)
@@ -55,6 +66,9 @@ def convecF(u, v):
   duvdy = np.zeros_like(u)
   du2dx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[2:, 1:-1])**2 / 2 - (u[:-2, 1:-1] + u[1:-1, 1:-1])**2 /2)
   duvdy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])*(u[1:-1, 1:-1] + u[1:-1, 2:])/4 - (v[1:-1, :-2] + v[2:, :-2])*(u[1:-1, :-2] + u[1:-1, 1:-1])/4)
+  
+  convec_F = u*upwind_x(u, dx) + v * upwind_y(u, dy)
+
   return du2dx + duvdy
 
 # duas funções ou apenas uma?
@@ -64,6 +78,9 @@ def convecG(u, v):
   duvdx = np.zeros_like(u)
   dv2dy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])**2 / 2 - (v[:-2, 1:-1] + v[1:-1, 1:-1])**2 /2)
   duvdx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[1:-1, 2:])*(v[1:-1, 1:-1] + v[2:, 1:-1])/4 - (u[:-2, 1:-1] + u[:-2, 2:])*(v[:-2, 1:-1] + v[1:-1, 1:-1])/4)
+  
+  convec_G = u * upwind_x(v, dx) + v * upwind_y(v, dy)
+  
   return dv2dy + duvdx
 
 def F(u, v):
@@ -72,9 +89,7 @@ def F(u, v):
   convectivo = convecF(u, v)
   difusivo = 1/Re * (d2udx2 + d2udy2)
 
-  u_corrigido = u + dt * (difusivo - convectivo)
-
-  return u_corrigido
+  return u + dt * (difusivo - convectivo)
 
 def G(u, v):
   d2vdx2, d2vdy2 = derivada_segunda(v, dx, dy)
@@ -82,9 +97,7 @@ def G(u, v):
   convectivo = convecG(u, v)
   difusivo = 1/Re * (d2vdx2 + d2vdy2)
 
-  v_corrigido = v + dt * (difusivo - convectivo)
-
-  return v_corrigido
+  return (v + dt * (difusivo - convectivo))
 
 def f(F, G):
   dFdx, _ = derivada_central(F, dx, dy)
@@ -112,18 +125,29 @@ def pressao(u, v, p):
           /
           (2 * (dx**2 + dy**2))
           )
+      
       p[-1, :] = p[-2, :]
       p[:, -1] = p[:, -2]
       p[:, 0] = p[:, 1]
       p[0, :] = p[1, :] # deve ser antes do erro
 
-      # BFS
-      p[:nr, :nr] = np.pi
-      p[nr+1, :nr] = p[nr+2, :nr]
-      p[:nr, nr+1] = p[:nr, nr+2]
+#
+#    +---------------------+
+#    !                     !
+#    !                     !
+#    +----+                !
+#    !    !                !
+#    !    !                !
+#    +----+----------------+
+#        31
+
+      #p[:nr, :nr] = np.pi #BFS
+      #p[nr, :nr] = p[nr+1, :nr]
+      #p[:nr, nr] = p[:nr, nr+1]
 
       erro = np.linalg.norm(p - p_old, ord=np.inf) / np.linalg.norm(p)
-      print("Diferença p: ", erro)
+  print("Diferença p: ", erro)
+  print("Norma da Velocidade: ", np.linalg.norm(u, ord=2))
   return p
 
 def passo(u, v, p):
@@ -138,23 +162,22 @@ def passo(u, v, p):
 
   u_next[:, 0] = 0.0
   u_next[:, -1] = 0.0
-  u_next[-1, :] = u_next[-2, :]
+  u_next[-1, :] = 0 # u_next[-2, :]
+  u_next[1:-1, -1] = 1
+  #u_next[0, -6:-1] = 1
+  
+  #u_next[0, nr:] = 1 #BFS
+  #u_next[:nr, :nr] = 0
 
-  # Entrada x
-  u_next[0, nr+1:] = 1
-  u_next[:nr, :nr] = 0
-
+ 
   v_next[:, 0] = 0
   v_next[:, -1] = 0
-  v_next[-1, :] = v_next[-2, :]
-
-  # Entrada y
-
-  v_next[0, nr+1:] = 0
-  v_next[:nr, :nr] = 0
+  v_next[0, :] = 0
+  v_next[-1, :] = 0 #v_next[-2, :]
+  #v_next[:nr, :nr] = 0 #BFS
   return u_next, v_next, p_next
 
-def rodar(u, v, p, t_final):
+def init(u, v, p, t_final):
   n = 0
   t = 0
   it = 0
@@ -212,4 +235,5 @@ def rodar(u, v, p, t_final):
   print('dt = ', dt)
   print(plotar)
   return u, v, p
-rodar(u0, v0, p0, t_final)
+u, v, p = init(u0, v0, p0, t_final)
+print(np.sum(u[0, :]) - np.sum(u[-1, :]))
