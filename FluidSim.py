@@ -4,21 +4,21 @@ import matplotlib.pyplot as plt
 
 #variáveis globais
 
-altura = 50
-comprimento = 100
+altura = 20
+comprimento = 20
 altura_ressalto = int(3/10 * altura)
 comprimento_ressalto = int(3/10 * comprimento)
-nx = 100
-ny = 50
+nx = 20
+ny = 20
 nr = int(3*ny/10)
 dx = comprimento / nx
 dy = altura / ny
-Re = 10
+Re = 1
 N_p = 10000
 tol = 1e-4
 u_max = 2	
 v_max = 2
-tau = 0.2
+tau = 0.1
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
 plotar = int(1/dt)
 t_final = 1000000*dt
@@ -32,7 +32,7 @@ Y = np.transpose(Y)
 
 # arrays iniciais
 
-u0 = -1*np.ones((nx, ny))
+u0 = 1*np.ones((nx, ny))
 v0 = 0*np.ones((nx, ny))
 p0 = 1*np.ones((nx, ny))
 
@@ -42,17 +42,6 @@ def derivada_central(campo, dx, dy):
     dcdx[1:-1, 1:-1] = (campo[2:, 1:-1] - campo[:-2, 1:-1]) / (2 * dx)
     dcdy[1:-1, 1:-1] = (campo[1:-1, 2:] - campo[1:-1, :-2]) / (2 * dy)
     return dcdx, dcdy
-
-def upwind_x(u, dx):
-    dudx = np.zeros_like(u)
-    dudx[1:-1, 1:-1] = (np.where(u[1:-1, 1:-1] > 0, (u[1:-1, 1:-1] - u[:-2, 1:-1]) / dx, (u[2:, 1:-1] - u[1:-1, 1:-1]) / dx))
-    return dudx
-
-def upwind_y(v, dy):
-    dvdy = np.zeros_like(v)
-    dvdy[1:-1, 1:-1] = (np.where(v[1:-1, 1:-1] > 0, (v[1:-1, 1:-1] - v[1:-1, :-2]) / dy, (v[1:-1, 2:] - v[1:-1, 1:-1]) / dy))
-    return dvdy
-
 
 def derivada_segunda(campo, dx, dy):
   d2cdx2 = np.zeros_like(campo)
@@ -66,8 +55,6 @@ def convecF(u, v):
   duvdy = np.zeros_like(u)
   du2dx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[2:, 1:-1])**2 / 2 - (u[:-2, 1:-1] + u[1:-1, 1:-1])**2 /2)
   duvdy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])*(u[1:-1, 1:-1] + u[1:-1, 2:])/4 - (v[1:-1, :-2] + v[2:, :-2])*(u[1:-1, :-2] + u[1:-1, 1:-1])/4)
-  
-  convec_F = u*upwind_x(u, dx) + v * upwind_y(u, dy)
 
   return du2dx + duvdy
 
@@ -78,8 +65,6 @@ def convecG(u, v):
   duvdx = np.zeros_like(u)
   dv2dy[1:-1, 1:-1] = 1/dy * ((v[1:-1, 1:-1] + v[2:, 1:-1])**2 / 2 - (v[:-2, 1:-1] + v[1:-1, 1:-1])**2 /2)
   duvdx[1:-1, 1:-1] = 1/dx * ((u[1:-1, 1:-1] + u[1:-1, 2:])*(v[1:-1, 1:-1] + v[2:, 1:-1])/4 - (u[:-2, 1:-1] + u[:-2, 2:])*(v[:-2, 1:-1] + v[1:-1, 1:-1])/4)
-  
-  convec_G = u * upwind_x(v, dx) + v * upwind_y(v, dy)
   
   return dv2dy + duvdx
 
@@ -160,10 +145,10 @@ def passo(u, v, p):
   u_next = F_ - dt*dpdx
   v_next = G_ - dt*dpdy
 
-  u_next[:, 0] = 0.0
-  u_next[:, -1] = 0.0
+  u_next[:, 0] = 0
+  u_next[:, -1] = 0
   u_next[-1, :] = 0 # u_next[-2, :]
-  u_next[1:-1, -1] = 1
+  u_next[:, -1] = 1
   #u_next[0, -6:-1] = 1
   
   #u_next[0, nr:] = 1 #BFS
@@ -171,7 +156,7 @@ def passo(u, v, p):
 
  
   v_next[:, 0] = 0
-  v_next[:, -1] = 0
+  v_next[:, -1] = v_next[-2, :]
   v_next[0, :] = 0
   v_next[-1, :] = 0 #v_next[-2, :]
   #v_next[:nr, :nr] = 0 #BFS
