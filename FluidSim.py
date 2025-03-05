@@ -1,3 +1,8 @@
+'''
+Note que o meshgrid está invertido, uso [i, j] sendo i índice de x e j índice de y
+
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 
