@@ -1,0 +1,13 @@
+difusao_x[1:-1, 1:-1] = 1/Re * ((u_anterior[2:, 1:-1] - 2*u_anterior[1:-1, 1:-1] + u_anterior[:-2, 1:-1]) / dx**2 +
+                                        (u_anterior[1:-1, 2:] - 2*u_anterior[1:-1, 1:-1] + u_anterior[1:-1, :-2]) / dy**2)
+    
+        conveccao_x[1:-1, 1:-1] = np.where(u_anterior[1:-1, 1:-1] >=0, u_anterior[1:-1, 1:-1]*(u_anterior[1:-1, 1:-1] - u_anterior[:-2, 1:-1])/dx, u_anterior[1:-1, 1:-1]*(u_anterior[2:, 1:-1] - u_anterior[1:-1, 1:-1])/dx) + (
+            np.where(v_anterior[1:-1, 1:-1] >= 0, v_anterior[1:-1, 1:-1]*(u_anterior[1:-1, 1:-1] - u_anterior[1:-1, :-2])/dy, v_anterior[1:-1, 1:-1]*(u_anterior[1:-1, 2:] - u_anterior[1:-1, 1:-1])/dy)
+        )
+
+        difusao_y[1:-1, 1:-1] = 1/Re * ((v_anterior[2:, 1:-1] - 2*v_anterior[1:-1, 1:-1] + v_anterior[:-2, 1:-1]) / dx**2 +
+                                        (v_anterior[1:-1, 2:] - 2*v_anterior[1:-1, 1:-1] + v_anterior[1:-1, :-2]) / dy**2)
+        
+        conveccao_y[1:-1, 1:-1] = np.where(v_anterior[1:-1, 1:-1] >= 0, v_anterior[1:-1, 1:-1]*(v_anterior[1:-1, :-2] - v_anterior[1:-1, 1:-1])/dy, v_anterior[1:-1, 1:-1]*(v_anterior[2:, 1:-1] - v_anterior[1:-1, 1:-1])/dy) + (
+            np.where(u_anterior[1:-1, 1:-1] >= 0, u_anterior[1:-1, 1:-1]*(v_anterior[1:-1, 1:-1] - v_anterior[:-2, 1:-1])/dx, u_anterior[1:-1, 1:-1]*(v_anterior[2:, 1:-1] - v_anterior[1:-1, 1:-1])/dx)
+        )
