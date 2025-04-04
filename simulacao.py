@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+#A pressão ainda está interferindo
+
 comprimento = 10
 altura = 10
 nx = 10
@@ -18,10 +20,8 @@ passos_tempo = 10000
 it_pressao = 100
 plotar_a_cada = 1
 
-proporcao_ressalto_duto_comprimento = 1
-proporcao_ressalto_duto_altura = 1
-altura_ressalto_pontos = int(proporcao_ressalto_duto_altura * ny)
-comprimento_ressalto_pontos = int(proporcao_ressalto_duto_comprimento * nx)
+altura_ressalto_pontos = 3
+comprimento_ressalto_pontos = 3
 
 def condicoes_contorno_pressao_duto(p):
     p[-1, :] = p[-2, :]
@@ -40,17 +40,13 @@ def condicoes_contorno_pressao_bfs(p):
     p[:, -1] = p[:, -2]
     p[:, 0] = p[:, 1]
     p[0, :] = p[1, :]
-    # p[0, 0] = (p[1, 0] + p[0, 1]) / 2  # Exemplo para o canto inferior esquerdo
-    # p[-1, 0] = (p[-2, 0] + p[-1, 1]) / 2  # Canto inferior direito
-    # p[0, -1] = (p[1, -1] + p[0, -2]) / 2  # Canto superior esquerdo
-    #p[-1, -1] = (p[-2, -1] + p[-1, -2]) / 2  # Canto superior direito
 
-    p[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0 # essas condições devem estar erradas
-    p[:comprimento_ressalto_pontos, altura_ressalto_pontos] = p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1]
-    p[comprimento_ressalto_pontos, :altura_ressalto_pontos] = p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos]
+    p[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
+    p[:comprimento_ressalto_pontos, altura_ressalto_pontos] = p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] #dpdy = 0
+    p[comprimento_ressalto_pontos, :altura_ressalto_pontos] = p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] #dpdx # diminuir variáveis
 
-    p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] = p[:comprimento_ressalto_pontos, altura_ressalto_pontos+2]
-    p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] = p[comprimento_ressalto_pontos+2, :altura_ressalto_pontos]
+    p[:comprimento_ressalto_pontos, altura_ressalto_pontos] = (p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] + p[:comprimento_ressalto_pontos, altura_ressalto_pontos-1])/2
+    p[comprimento_ressalto_pontos, :altura_ressalto_pontos] = (p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] + p[comprimento_ressalto_pontos-1, :altura_ressalto_pontos])/2
 
     return p
 
@@ -105,8 +101,8 @@ def condicoes_contorno_velocidades_bfs(u, v):
 
 
     # Velocidade no interior da borda
-    #u[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
-    #v[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
+    u[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
+    v[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
 
 
     return u, v
@@ -200,7 +196,7 @@ def simulacao(u0, v0, p0):
             print(i)
             plt.contourf(X, Y, velocidade_modulo, levels=10, cmap='viridis')
             plt.colorbar()
-            #plt.quiver(X, Y, u, v, alpha=0.5, scale=25)
+            plt.quiver(X, Y, u, v, alpha=0.1, scale=50)
             plt.draw()
             plt.pause(0.005)
             plt.clf()

@@ -4,7 +4,7 @@ simulação.comprimento = 5
 simulação.altura = 5
 simulação.nx = 100
 simulação.ny = 100
-simulação.Re = 1
+simulação.Re = 10
 
 simulação.u_max = 2
 simulação.v_max = 2
