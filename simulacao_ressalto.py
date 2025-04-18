@@ -15,7 +15,7 @@ tau = 0.3
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
 passos_tempo = 10000
 
-it_pressao = 100
+it_pressao = 1000
 plotar_a_cada = 1
 
 alt_bfs = 5 # em número de pontos
@@ -35,8 +35,6 @@ def condicoes_contorno_pressao_bfs(p):
     p[comp_bfs:, 0] = p[comp_bfs:, 1]
 
     p[0, alt_bfs+1:-1] = p[1, alt_bfs+1:-1]
-    #p[comp_bfs, :alt_bfs] = (p[comp_bfs+1, :alt_bfs] + p[comp_bfs-1, :alt_bfs])/2 #d2pdx2 = 0
-    #p[:comp_bfs, alt_bfs] = (p[:comp_bfs, alt_bfs+1] + p[:comp_bfs, alt_bfs-1])/2 #d2pdy2 = 0
 
     return p
 def condicoes_contorno_velocidades_bfs(u, v):
@@ -144,6 +142,8 @@ def simulacao(u0, v0, p0):
             #plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
             plt.contourf(X, Y, velocidade_modulo, levels=10, cmap='viridis')
             plt.colorbar()
+            plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
+            plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
             plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
             plt.draw()
             plt.pause(0.005)
@@ -155,7 +155,7 @@ def simulacao(u0, v0, p0):
     plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
     plt.colorbar()
     plt.show()
-    plt.streamplot(Y, X, u, v, color=velocidade_modulo, cmap='viridis', density=1)
+    plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)
     plt.colorbar()
     plt.show()
 if __name__ == '__main__':
