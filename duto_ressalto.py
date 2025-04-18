@@ -1,22 +1,23 @@
-import simulacao
+import simulacao_ressalto
 
-simulacao.comprimento = 10
-simulacao.altura = 1
-simulacao.nx = 150
-simulacao.ny = 200
-simulacao.Re = 1
+simulacao_ressalto.comprimento = 10
+simulacao_ressalto.altura = 1
+simulacao_ressalto.nx = 50
+simulacao_ressalto.ny = 75
+simulacao_ressalto.Re = 10
 
-simulacao.u_max = 3
-simulacao.v_max = 3
-simulacao.tau = 0.8
-simulacao.passos_tempo = 1000
-simulacao.it_pressao = 1000
-simulacao.plotar_a_cada = 1
+simulacao_ressalto.u_max = 5
+simulacao_ressalto.v_max = 5
+simulacao_ressalto.tau = 1
+simulacao_ressalto.passos_tempo = 10000
 
-simulacao.comprimento_ressalto_pontos = 30
-simulacao.altura_ressalto_pontos = 30
+simulacao_ressalto.it_pressao = 100
+simulacao_ressalto.plotar_a_cada = 1
 
-simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_bfs
-simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_bfs
+simulacao_ressalto.comp_bfs = 10    
+simulacao_ressalto.alt_bfs = 30
 
-simulacao.simulacao(1, 0, 0)
+simulacao_ressalto.condicoes_contorno_velocidades_duto = simulacao_ressalto.condicoes_contorno_velocidades_bfs
+simulacao_ressalto.condicoes_contorno_pressao_duto = simulacao_ressalto.condicoes_contorno_pressao_bfs
+
+simulacao_ressalto.simulacao(1, 0, 0)
