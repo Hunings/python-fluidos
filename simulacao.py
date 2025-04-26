@@ -35,20 +35,6 @@ def condicoes_contorno_pressao_cavidade(p):
     p[:, 0] = p[:, 1]
     p[0, :] = p[1, :] 
     return p
-def condicoes_contorno_pressao_bfs(p):
-    p[-1, :] = p[-2, :]
-    p[:, -1] = p[:, -2]
-    p[:, 0] = p[:, 1]
-    p[0, :] = p[1, :]
-
-    p[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
-    p[:comprimento_ressalto_pontos, altura_ressalto_pontos] = p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] #dpdy = 0
-    p[comprimento_ressalto_pontos, :altura_ressalto_pontos] = p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] #dpdx # diminuir variáveis
-
-    p[:comprimento_ressalto_pontos, altura_ressalto_pontos] = (p[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] + p[:comprimento_ressalto_pontos, altura_ressalto_pontos-1])/2
-    p[comprimento_ressalto_pontos, :altura_ressalto_pontos] = (p[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] + p[comprimento_ressalto_pontos-1, :altura_ressalto_pontos])/2
-
-    return p
 
 def condicoes_contorno_velocidades_duto(u, v):
    # Paredes
@@ -75,36 +61,6 @@ def condicoes_contorno_velocidades_cavidade(u, v):
     # Parede de entrada de fluido
     u[:, -1] = 1
     v[:, -1] = v[:, -2]
-    return u, v
-def condicoes_contorno_velocidades_bfs(u, v):
-    u[:, 0] = 0
-    u[:, -1] = 0
-    v[:, 0] = 0
-    v[:, -1] = 0
-    
-    # Entrada
-    u[0, altura_ressalto_pontos:-1] = 1
-    v[0, altura_ressalto_pontos:] = 0
-    # Saída
-    u[-1, :] = u[-2, :]
-    v[-1, :] = v[-2, :]
-
-    # Tentativa de Suavização nas bordas
-    # u[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] = u[:comprimento_ressalto_pontos, altura_ressalto_pontos+2]
-    # v[:comprimento_ressalto_pontos, altura_ressalto_pontos+1] = v[:comprimento_ressalto_pontos, altura_ressalto_pontos+2]
-    
-    # u[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] = u[comprimento_ressalto_pontos+2, :altura_ressalto_pontos]
-    # v[comprimento_ressalto_pontos+1, :altura_ressalto_pontos] = v[comprimento_ressalto_pontos+2, :altura_ressalto_pontos]
-
-    # u[comprimento_ressalto_pontos, 1] = (u[comprimento_ressalto_pontos+1, 1] + u[comprimento_ressalto_pontos, 2])/2
-    # v[comprimento_ressalto_pontos, 1] = (v[comprimento_ressalto_pontos+1, 1] + v[comprimento_ressalto_pontos, 2])/2
-
-
-    # Velocidade no interior da borda
-    u[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
-    v[:comprimento_ressalto_pontos, :altura_ressalto_pontos] = 0
-
-
     return u, v
 
 def simulacao(u0, v0, p0):

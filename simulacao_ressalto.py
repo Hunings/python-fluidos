@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import njit
+import time
+
+t0 = time.perf_counter()
 
 comprimento = 10
 altura = 10
@@ -15,7 +19,7 @@ tau = 0.3
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
 passos_tempo = 10000
 
-it_pressao = 1000
+it_pressao = 100
 plotar_a_cada = 1
 
 alt_bfs = 5 # em número de pontos
@@ -24,7 +28,6 @@ comp_bfs = 5
 def condicoes_contorno_pressao_bfs(p):
     # Paredes 
     p[-1, :] = 0
-    #p[-1, :] = p[-2, :]
     p[:, -1] = p[:, -2]
 
     # Paredes Duto
@@ -55,7 +58,7 @@ def condicoes_contorno_velocidades_bfs(u, v):
     v[:comp_bfs+1, :alt_bfs+1] = 0
 
     return u, v
-
+    
 def simulacao(u0, v0, p0):
     # Malha
     x = np.linspace(0.0, comprimento, nx)
@@ -109,7 +112,6 @@ def simulacao(u0, v0, p0):
 
         # Resolve a Pressão iterativamente
         p = np.copy(p_ant)
-        print(p_ant)
         for j in range(it_pressao):
             p_old = np.copy(p)
             p[1:-1, 1:-1] = np.where(mascara[1:-1, 1:-1], ((
@@ -140,19 +142,21 @@ def simulacao(u0, v0, p0):
             print(i)
             #plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
             #plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
-            plt.contourf(X, Y, velocidade_modulo, levels=10, cmap='viridis')
+            plt.contourf(X, Y, velocidade_modulo, levels=60, cmap='viridis')
             plt.colorbar()
             plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
             plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
-            plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
+            #plt.quiver(X[::4, ::4], Y[::4, ::4], u[::4, ::4], v[::4, ::4], color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()
+    t1 = time.perf_counter()
+    print(f"Tempo com JIT: {t1 - t0:.3f} s")
     plt.show()
     plt.contourf(X, Y, velocidade_modulo, levels=10)
     plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
     plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
-    plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
+    plt.quiver(X[::4, ::4], Y[::4, ::4], u[::4, ::4], v[::4, ::4], color='white')
     plt.colorbar()
     plt.show()
     plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)
