@@ -136,8 +136,6 @@ def simulacao(u0, v0, p0):
         velocidade_modulo = (u**2 + v**2)**(0.5)
         if i % plotar_a_cada == 0:
             print(i)
-            #plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
-            #plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
             plt.contourf(X, Y, velocidade_modulo, levels=60, cmap='viridis')
             plt.colorbar()
             plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
