@@ -1,9 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import njit
-import time
-
-t0 = time.perf_counter()
 
 comprimento = 10
 altura = 10
@@ -150,8 +146,6 @@ def simulacao(u0, v0, p0):
             plt.draw()
             plt.pause(0.005)
             plt.clf()
-    t1 = time.perf_counter()
-    print(f"Tempo com JIT: {t1 - t0:.3f} s")
     plt.show()
     plt.contourf(X, Y, velocidade_modulo, levels=10)
     plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')

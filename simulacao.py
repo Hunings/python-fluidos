@@ -150,9 +150,9 @@ def simulacao(u0, v0, p0):
         velocidade_modulo = (u**2 + v**2)**(0.5)
         if i % plotar_a_cada == 0:
             print(i)
-            plt.contourf(X, Y, velocidade_modulo, levels=10, cmap='viridis')
+            plt.pcolormesh(X, Y, velocidade_modulo, levels=60, cmap='viridis')
             plt.colorbar()
-            plt.quiver(X, Y, u, v, alpha=0.1, scale=50)
+            plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()
