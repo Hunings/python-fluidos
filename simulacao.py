@@ -20,9 +20,6 @@ passos_tempo = 10000
 it_pressao = 100
 plotar_a_cada = 1
 
-altura_ressalto_pontos = 3
-comprimento_ressalto_pontos = 3
-
 def condicoes_contorno_pressao_duto(p):
     p[-1, :] = 0
     p[:, -1] = p[:, -2]
@@ -31,7 +28,7 @@ def condicoes_contorno_pressao_duto(p):
     return p
 def condicoes_contorno_pressao_cavidade(p):
     p[-1, :] = p[-2, :]
-    p[:, -1] = p[:, -2]
+    p[:, -1] = 0
     p[:, 0] = p[:, 1]
     p[0, :] = p[1, :] 
     return p
@@ -43,7 +40,7 @@ def condicoes_contorno_velocidades_duto(u, v):
     v[:, 0] = 0
     v[:, -1] = 0
     # Entrada
-    u[0, 1:-1] = 1
+    u[0, :] = 1
     v[0, :] = 0
     
     # Saída
@@ -148,11 +145,11 @@ def simulacao(u0, v0, p0):
         u_anterior, v_anterior, p_anterior = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if i % plotar_a_cada == np.pi:
+        if i % plotar_a_cada == 231:
             print(i)
-            plt.pcolormesh(X, Y, velocidade_modulo, cmap='viridis')
+            plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()
-            plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
+            plt.quiver(X, Y, u, v, color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()

@@ -1,21 +1,41 @@
-import simulação
+import simulacao
+import matplotlib.pyplot as plt
 
-simulação.comprimento = 5
-simulação.altura = 5
-simulação.nx = 100
-simulação.ny = 100
-simulação.Re = 10
+simulacao.comprimento = 1
+simulacao.altura = 1
+simulacao.nx = 30
+simulacao.ny = 30
+simulacao.Re = 10
 
-simulação.u_max = 2
-simulação.v_max = 2
-simulação.tau = 0.1
-simulação.passos_tempo = 5000
-simulação.it_pressao = 100
-simulação.plotar_a_cada = 1
+simulacao.u_max = 5
+simulacao.v_max = 5
+simulacao.tau = 0.1
+simulacao.passos_tempo = 10000
+simulacao.it_pressao = 100
+simulacao.plotar_a_cada = 1
 
-simulação.condicoes_contorno_velocidades_duto = simulação.condicoes_contorno_velocidades_cavidade
-simulação.condicoes_contorno_pressao_duto = simulação.condicoes_contorno_pressao_cavidade
+simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_cavidade
+simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_cavidade
 
-simulação.simulacao(0, 0, 0)
+X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(-1, 0, 1)
 
+#Visualização 
+
+plt.figure(figsize=(11, 10))
+plt.quiver(X, Y, u, v, velocidade_modulo, scale=40)
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
+plt.figure(figsize=(11, 10))
+plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo, cmap='viridis')
+plt.colorbar()
+plt.xlabel('X')
+plt.ylabel('Y')  
+plt.show()
+plt.figure(figsize=(11, 10))
+plt.contourf(X, Y, p)
+plt.colorbar()
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
 #CC utilizada foi Neumann nas bordas
