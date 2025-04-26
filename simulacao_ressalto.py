@@ -148,7 +148,7 @@ def simulacao(u0, v0, p0):
     plt.contourf(X, Y, velocidade_modulo, levels=10)
     plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
     plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
-    plt.quiver(X[::4, ::4], Y[::4, ::4], u[::4, ::4], v[::4, ::4], color='white')
+    plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
     plt.colorbar()
     plt.show()
     plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)

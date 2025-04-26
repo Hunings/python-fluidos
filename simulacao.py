@@ -24,7 +24,7 @@ altura_ressalto_pontos = 3
 comprimento_ressalto_pontos = 3
 
 def condicoes_contorno_pressao_duto(p):
-    p[-1, :] = p[-2, :]
+    p[-1, :] = 0
     p[:, -1] = p[:, -2]
     p[:, 0] = p[:, 1]
     p[0, :] = p[1, :]
@@ -150,7 +150,7 @@ def simulacao(u0, v0, p0):
         velocidade_modulo = (u**2 + v**2)**(0.5)
         if i % plotar_a_cada == 0:
             print(i)
-            plt.pcolormesh(X, Y, velocidade_modulo, levels=60, cmap='viridis')
+            plt.pcolormesh(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()
             plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
             plt.draw()
@@ -160,10 +160,16 @@ def simulacao(u0, v0, p0):
     plt.contourf(X, Y, velocidade_modulo, levels=10)
     plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
     plt.colorbar()
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Módulo da Velocidade')
     plt.show()
-    plt.pcolormesh(X, Y, velocidade_modulo, levels=60, cmap='viridis')
+    plt.pcolormesh(X, Y, velocidade_modulo, cmap='viridis')
     plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
     plt.colorbar()
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Módulo da Velocidade')
     plt.show()
     plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)
     plt.colorbar()

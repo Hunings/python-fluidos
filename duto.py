@@ -1,23 +1,22 @@
-import simulação
+import simulacao
 import matplotlib.pyplot as plt
 
-simulação.comprimento = 10
-simulação.altura = 1
-simulação.nx = 40
-simulação.ny = 40
-simulação.Re = 1
+simulacao.comprimento = 20
+simulacao.altura = 1
+simulacao.nx = 30
+simulacao.ny = 30
+simulacao.Re = 1
 
-simulação.u_max = 1.5
-simulação.v_max = 1.5
-simulação.tau = 0.1
-simulação.passos_tempo = 5000
-simulação.it_pressao = 50
-simulação.plotar_a_cada = 10
-simulação.dt = 0.01
+simulacao.u_max = 3
+simulacao.v_max = 3
+simulacao.tau = 0.1
+simulacao.passos_tempo = 10
+simulacao.it_pressao = 100
+simulacao.plotar_a_cada = 10
 
-simulação.condicoes_contorno_velocidades_duto = simulação.condicoes_contorno_velocidades_duto
-simulação.condicoes_contorno_pressao_duto = simulação.condicoes_contorno_pressao_duto
+simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_duto
+simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_duto
 
-print(simulação.dt)
-simulação.simulacao(1, 0, 1)
+print(simulacao.dt)
+simulacao.simulacao(1, 0, 1)
 
