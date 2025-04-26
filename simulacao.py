@@ -88,6 +88,7 @@ def simulacao(u0, v0, p0):
 
     # Iteração 
     for i in range(passos_tempo):
+        print(i)
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_anterior[2:, 1:-1] - 2*u_anterior[1:-1, 1:-1] + u_anterior[:-2, 1:-1]) / dx**2 +
                                         (u_anterior[1:-1, 2:] - 2*u_anterior[1:-1, 1:-1] + u_anterior[1:-1, :-2]) / dy**2)
     
@@ -156,24 +157,6 @@ def simulacao(u0, v0, p0):
             plt.pause(0.005)
             plt.clf()
     plt.show()
-    plt.contourf(X, Y, velocidade_modulo, levels=10)
-    plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
-    plt.colorbar()
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title('Módulo da Velocidade')
-    plt.show()
-    plt.pcolormesh(X, Y, velocidade_modulo, cmap='viridis')
-    plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
-    plt.colorbar()
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title('Módulo da Velocidade')
-    plt.show()
-    plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)
-    plt.colorbar()
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.show()
+    return X, Y, u, v, p, velocidade_modulo
 if __name__ == '__main__':
     print(simulacao(1, 0, 1))
