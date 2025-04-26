@@ -134,7 +134,6 @@ def simulacao(u0, v0, p0):
           )
             # Condições de Contorno Pressão
             p = condicoes_contorno_pressao_duto(p)
-            erro = np.linalg.norm((p - p_old)/p, ord=np.inf)
 
         dpdx[1:-1, 1:-1] = (p[2:, 1:-1] - p[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p[1:-1, 2:] - p[1:-1, :-2])/(2*dy)
@@ -148,7 +147,7 @@ def simulacao(u0, v0, p0):
         u_anterior, v_anterior, p_anterior = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if i % plotar_a_cada == 0:
+        if i % plotar_a_cada == np.pi:
             print(i)
             plt.pcolormesh(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()
@@ -173,6 +172,8 @@ def simulacao(u0, v0, p0):
     plt.show()
     plt.streamplot(X.T, Y.T, u.T, v.T, cmap='viridis', density=2)
     plt.colorbar()
+    plt.xlabel('X')
+    plt.ylabel('Y')
     plt.show()
 if __name__ == '__main__':
     print(simulacao(1, 0, 1))

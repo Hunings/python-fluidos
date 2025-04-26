@@ -10,8 +10,8 @@ simulacao.Re = 1
 simulacao.u_max = 3
 simulacao.v_max = 3
 simulacao.tau = 0.1
-simulacao.passos_tempo = 10
-simulacao.it_pressao = 100
+simulacao.passos_tempo = 10000
+simulacao.it_pressao = 50
 simulacao.plotar_a_cada = 10
 
 simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_duto
