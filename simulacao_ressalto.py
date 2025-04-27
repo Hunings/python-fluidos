@@ -82,6 +82,7 @@ def simulacao(u0, v0, p0):
 
     # Iteração 
     for i in range(passos_tempo):
+        print(i)
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +
                                         (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2)
     

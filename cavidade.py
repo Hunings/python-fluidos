@@ -17,17 +17,18 @@ simulacao.plotar_a_cada = 1
 simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_cavidade
 simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_cavidade
 
-X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(-1, 0, 1)
+X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(0, 0, 1)
 
 #Visualização 
 
 plt.figure(figsize=(11, 10))
-plt.quiver(X, Y, u, v, velocidade_modulo, scale=40)
+plt.quiver(X, Y, u, v, velocidade_modulo, scale=20)
 plt.xlabel('X')
 plt.ylabel('Y')
+plt.colorbar()
 plt.show()
 plt.figure(figsize=(11, 10))
-plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo, cmap='viridis')
+plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
 plt.colorbar()
 plt.xlabel('X')
 plt.ylabel('Y')  
