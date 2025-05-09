@@ -57,7 +57,7 @@ def condicoes_contorno_velocidades_cavidade(u, v):
     v[:, 0] = 0
     # Parede de entrada de fluido
     u[:, -1] = 1
-    v[:, -1] = v[:, -2]
+    v[:, -1] = 0
     return u, v
 
 def simulacao(u0, v0, p0):
@@ -145,7 +145,7 @@ def simulacao(u0, v0, p0):
         u_anterior, v_anterior, p_anterior = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if i % plotar_a_cada == 231:
+        if i % plotar_a_cada == 123:
             print(i)
             plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()

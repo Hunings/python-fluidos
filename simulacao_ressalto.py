@@ -9,6 +9,7 @@ Re = 10
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 
+tol = 1e-3
 u_max = 5
 v_max = 5
 tau = 0.3
@@ -16,14 +17,14 @@ dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
 passos_tempo = 10000
 
 it_pressao = 100
-plotar_a_cada = 1
+plotar_a_cada = 1   
 
 alt_bfs = 5 # em número de pontos
 comp_bfs = 5
 
 def condicoes_contorno_pressao_bfs(p):
     # Paredes 
-    p[-1, :] = 0
+    p[-1, :] = p[-2, :]
     p[:, -1] = p[:, -2]
 
     # Paredes Duto
@@ -31,7 +32,7 @@ def condicoes_contorno_pressao_bfs(p):
     p[:comp_bfs+1, :alt_bfs+1] = 0 # p = 0 no ressalto
     p[comp_bfs, :alt_bfs+1] = p[comp_bfs+1, :alt_bfs+1] #dpdx = 0,  +1 no alt_bfs porque :alt_bfs vai até alt_bfs-1
     p[:comp_bfs+1, alt_bfs] = p[:comp_bfs+1, alt_bfs] #dpdy = 0
-    p[comp_bfs:, 0] = p[comp_bfs:, 1]
+    p[comp_bfs:, 0] = p[comp_bfs:, 1] #dpdy=0
 
     p[0, alt_bfs+1:-1] = p[1, alt_bfs+1:-1]
 
@@ -44,7 +45,7 @@ def condicoes_contorno_velocidades_bfs(u, v):
     
     # Entrada
     u[0, alt_bfs+1:-1] = 1
-    v[0, alt_bfs+1:] = 0
+    v[0, alt_bfs+1:-1] = 0
     # Saída
     u[-1, :] = u[-2, :]
     v[-1, :] = v[-2, :]
@@ -109,22 +110,28 @@ def simulacao(u0, v0, p0):
 
         # Resolve a Pressão iterativamente
         p = np.copy(p_ant)
-        for j in range(it_pressao):
+        p_novo = np.copy(p)
+        j = 0
+        deltap=1
+        while j < it_pressao and deltap > tol:
             p_old = np.copy(p)
-            p[1:-1, 1:-1] = np.where(mascara[1:-1, 1:-1], ((
+            p_novo[1:-1, 1:-1] = (
               dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1])
               +
               dx**2 * (p[1:-1, 2:] + p[1:-1, :-2])
               -
-              dx**2 * dy**2 * fonte[1:-1, 1:-1])
-              /
-            (2 * (dx**2 + dy**2))
-            ), p_old[1:-1, 1:-1])
+              dx**2 * dy**2 * fonte[1:-1, 1:-1])/(2 * (dx**2 + dy**2))
             # Condições de Contorno Pressão
-            p = condicoes_contorno_pressao_bfs(p)
+            p_novo = condicoes_contorno_pressao_bfs(p_novo)
+            deltap = np.max(np.abs(p_old-p_novo))
+            p = p_novo
+            j+=1
 
         dpdx[1:-1, 1:-1] = (p[2:, 1:-1] - p[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p[1:-1, 2:] - p[1:-1, :-2])/(2*dy)
+
+        dpdx[:comp_bfs+1, :alt_bfs+1] = 0
+        dpdy[:comp_bfs+1, :alt_bfs+1] = 0
 
         u[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
         v[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
@@ -135,9 +142,8 @@ def simulacao(u0, v0, p0):
         u_ant, v_ant, p_ant = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if i % plotar_a_cada == np.pi:
-            print(i)
-            plt.contourf(X, Y, velocidade_modulo, levels=60, cmap='viridis')
+        if i % plotar_a_cada == 0:
+            plt.contourf(X, Y, velocidade_modulo, levels=30, cmap='viridis')
             plt.colorbar()
             plt.plot(X[:comp_bfs+1, alt_bfs], Y[:comp_bfs+1, alt_bfs], c='black')
             plt.plot(X[comp_bfs, :alt_bfs+1], Y[comp_bfs, :alt_bfs+1], c='black')
@@ -145,6 +151,8 @@ def simulacao(u0, v0, p0):
             plt.draw()
             plt.pause(0.005)
             plt.clf()
+        if i % plotar_a_cada == 0:
+            print('It:', i, '||u||=', np.linalg.norm(velocidade_modulo), '|∆p|=', deltap)
     plt.show()
     return X, Y, u, v, p, velocidade_modulo
 if __name__ == '__main__':

@@ -10,14 +10,14 @@ simulacao.Re = 10
 simulacao.u_max = 5
 simulacao.v_max = 5
 simulacao.tau = 0.1
-simulacao.passos_tempo = 10000
+simulacao.passos_tempo = 1000
 simulacao.it_pressao = 100
 simulacao.plotar_a_cada = 1
 
 simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_cavidade
 simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_cavidade
 
-X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(0, 0, 1)
+X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(-1, 0, 1)
 
 #Visualização 
 
