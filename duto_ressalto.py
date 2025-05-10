@@ -1,41 +1,45 @@
-import simulacao_ressalto
 import matplotlib.pyplot as plt
+import simulacao_ressalto as sim
+import numpy as np
 
-simulacao_ressalto.comprimento = 10
-simulacao_ressalto.altura = 1
-simulacao_ressalto.nx = 29
-simulacao_ressalto.ny = 29
-simulacao_ressalto.Re = 100
+sim.comprimento = 10
+sim.altura = 1
+sim.nx = 40
+sim.ny = 40
+sim.Re = 1000
+sim.dx = sim.comprimento/(sim.nx-1)
+sim.dy = sim.altura/(sim.ny-1)
+u_max = 3
+v_max = 3
+tau = 0.8
+sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
 
-simulacao_ressalto.u_max = 5
-simulacao_ressalto.v_max = 5
-simulacao_ressalto.tau = 0.1
-simulacao_ressalto.passos_tempo = 3000
+sim.passos_tempo = 10000
 
-simulacao_ressalto.it_pressao = 100
-simulacao_ressalto.plotar_a_cada = 1
+sim.it_pressao = 100
+sim.tol = 1e-2
+sim.plotar_a_cada = 1
 
-simulacao_ressalto.comp_bfs = 15    
-simulacao_ressalto.alt_bfs = 15
+sim.sx = int(sim.nx/4)
+sim.sy = int(sim.ny/4)
 
-simulacao_ressalto.condicoes_contorno_velocidades_duto = simulacao_ressalto.condicoes_contorno_velocidades_bfs
-simulacao_ressalto.condicoes_contorno_pressao_duto = simulacao_ressalto.condicoes_contorno_pressao_bfs
+X, Y, u, v, p, velocidade_modulo = sim.simulacao(1, 0, 0)
 
-X, Y, u, v, p, velocidade_modulo = simulacao_ressalto.simulacao(1, 0, 0)
+print(sim.nx, sim.ny)
 
-plt.figure(figsize=(100, 10))
+plt.figure(figsize=(50, 5))
 plt.quiver(X, Y, u, v, velocidade_modulo, scale=30)
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.colorbar()
 plt.show()
-plt.figure(figsize=(12, 6))
-plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
+plt.figure(figsize=(50, 5))
+plt.streamplot(np.transpose(X), np.transpose(Y), np.transpose(u), np.transpose(v), color=velocidade_modulo, cmap='inferno')
 plt.colorbar()
 plt.xlabel('X')
 plt.ylabel('Y')  
 plt.show()
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(50, 5))
 plt.contourf(X, Y, p)
 plt.colorbar()
 plt.xlabel('X')
