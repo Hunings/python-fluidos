@@ -145,14 +145,14 @@ def simulacao(u0, v0, p0):
         u_anterior, v_anterior, p_anterior = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if i % plotar_a_cada == 123:
+        '''if i % plotar_a_cada == 0:
             print(i)
             plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()
             plt.quiver(X, Y, u, v, color='white')
             plt.draw()
             plt.pause(0.005)
-            plt.clf()
+            plt.clf()'''
     plt.show()
     return X, Y, u, v, p, velocidade_modulo
 if __name__ == '__main__':

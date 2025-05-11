@@ -1,29 +1,31 @@
-import simulacao
+import simulacao as sim
 import matplotlib.pyplot as plt
 
 #Define as constantes da simulação
-simulacao.comprimento = 10
-simulacao.altura = 1
-simulacao.nx = 30
-simulacao.ny = 30
-simulacao.Re = 100
+sim.comprimento = 10
+sim.altura = 1
+sim.nx = 20
+sim.ny = 40
+sim.Re = 10000
+sim.dx = sim.comprimento / (sim.nx -1)
+sim.dy = sim.altura / (sim.ny -1)
 
-simulacao.u_max = 3
-simulacao.v_max = 3
-simulacao.tau = 0.1
-simulacao.passos_tempo = 10000
-simulacao.it_pressao = 100
-simulacao.plotar_a_cada = 10
+u_max = 3
+v_max = 3
+tau = 0.1
+sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
+t_final = 10
+sim.passos_tempo = int(t_final / sim.dt)
+sim.it_pressao = 100
+sim.plotar_a_cada = 100
 
 # Modifica as condições de contorno internas
 
-simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_duto
-simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_duto
-
-print(simulacao.dt)
+sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_duto
+sim.condicoes_contorno_pressao_duto = sim.condicoes_contorno_pressao_duto
 
 #Executa a simulação
-X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(1, 0, 1)
+X, Y, u, v, p, velocidade_modulo = sim.simulacao(1, 0, 1)
 
 #Visualização 
 

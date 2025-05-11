@@ -144,7 +144,10 @@ def simulacao(u0, v0, p0):
             plt.pause(0.005)
             plt.clf()
         if i % plotar_a_cada == 0:
-            print('It:', i, '||u||=', np.linalg.norm(velocidade_modulo), '|∆p|=', deltap)
+            V_max = np.max(velocidade_modulo)
+            print('It:', i, '/', passos_tempo, '||u||=', V_max, '|∆p|=', deltap)
+            if V_max > 5:
+                break
     plt.show()
     print(u)
     return X, Y, u, v, p, velocidade_modulo

@@ -1,23 +1,26 @@
-import simulacao
+import simulacao as sim
 import matplotlib.pyplot as plt
 
-simulacao.comprimento = 1
-simulacao.altura = 1
-simulacao.nx = 30
-simulacao.ny = 30
-simulacao.Re = 10
+sim.comprimento = 1
+sim.altura = 1
+sim.nx = 80
+sim.ny = 80
+sim.Re = 3000
 
-simulacao.u_max = 5
-simulacao.v_max = 5
-simulacao.tau = 0.1
-simulacao.passos_tempo = 1000
-simulacao.it_pressao = 100
-simulacao.plotar_a_cada = 1
+u_max = 3
+v_max = 3
+tau = 0.1
+sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
+t_final = 200
 
-simulacao.condicoes_contorno_velocidades_duto = simulacao.condicoes_contorno_velocidades_cavidade
-simulacao.condicoes_contorno_pressao_duto = simulacao.condicoes_contorno_pressao_cavidade
+sim.passos_tempo = int(t_final/sim.dt)
+sim.it_pressao = 100
+sim.plotar_a_cada = 10
 
-X, Y, u, v, p, velocidade_modulo = simulacao.simulacao(-1, 0, 1)
+sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_cavidade
+sim.condicoes_contorno_pressao_duto = sim.condicoes_contorno_pressao_cavidade
+
+X, Y, u, v, p, velocidade_modulo = sim.simulacao(0, 0, 1)
 
 #Visualização 
 
