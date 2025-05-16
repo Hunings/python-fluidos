@@ -3,19 +3,21 @@ import matplotlib.pyplot as plt
 
 sim.comprimento = 1
 sim.altura = 1
-sim.nx = 80
-sim.ny = 80
-sim.Re = 3000
+sim.nx = 30
+sim.ny = 30
+sim.Re = 100
+sim.dx = sim.comprimento / (sim.nx - 1)
+sim.dy = sim.altura / (sim.ny - 1)
 
-u_max = 3
-v_max = 3
+u_max = 10
+v_max = 10
 tau = 0.1
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
-t_final = 200
+t_final = 20
 
 sim.passos_tempo = int(t_final/sim.dt)
-sim.it_pressao = 100
-sim.plotar_a_cada = 10
+sim.it_pressao = 200
+sim.plotar_a_cada = 1
 
 sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_cavidade
 sim.condicoes_contorno_pressao_duto = sim.condicoes_contorno_pressao_cavidade
@@ -42,4 +44,3 @@ plt.colorbar()
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.show()
-#CC utilizada foi Neumann nas bordas

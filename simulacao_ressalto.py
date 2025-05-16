@@ -27,8 +27,8 @@ def condicoes_contorno_pressao_bfs(p):
     # Paredes Duto
     p[sx:, 0] = p[sx:, 1] #dpdy = 0 sul
     p[:sx+1, :sy+1] = 0# p = 0 no ressalto
-    p[sx, :sy] = p[sx+1, :sy] #dpdx = 0,  parede leste ressalto
-    p[:sx+1, sy] = p[:sx+1, sy+1] #dpdy = 0, parede norte do ressalto
+    p[sx, :sy+1] = p[sx+1, :sy+1] #dpdx = 0,  parede leste ressalto
+    p[:sx, sy] = p[:sx, sy+1] #dpdy = 0, parede norte do ressalto
 
     p[0, sy+1:-1] = p[1, sy+1:-1]
 
