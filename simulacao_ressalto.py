@@ -9,8 +9,11 @@ Re = 1
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 
+u_max = 5
+v_max = 5
 tol = 1e-2
 dt = 1e-5
+t_final = 1
 passos_tempo = 4000
 
 it_pressao = 100
@@ -19,6 +22,23 @@ plotar_a_cada = 1
 sy = int(nx/5)
 sx = int(nx/5)
 
+def parametros():
+    print("Parâmetros da simulação a seguir")
+    print("Altura: ", altura)
+    print("Comprimento: ", comprimento)
+    print("Número de pontos x: ", nx)
+    print("Número de pontos y: ", ny)
+    print("Número de Reynolds: ", Re)
+    print("Espaçamento x: ", dx)
+    print("Espaçamento y: ", dy)
+    print("Passo de tempo: ", dt)
+    print("Tolerância na diferença de pressão: ", tol)
+    print("Velocidade máxima em x: ", u_max)
+    print("Velocidade máxima em y: ", v_max)
+    print("Total de iterações no tempo: ", passos_tempo)
+    print(f"Tamanho do degrau {sx}x{sy}")
+    input("Pressione qualquer tecla para continuar")
+    return 
 def condicoes_contorno_pressao_bfs(p):
     # Paredes   
     p[-1, :] = p[-2, :] # leste
@@ -80,6 +100,7 @@ def simulacao(u0, v0, p0):
     p_ant = condicoes_contorno_pressao_bfs(p_ant)
 
     # Iteração 
+    parametros()
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +

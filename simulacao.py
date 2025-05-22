@@ -17,6 +17,7 @@ v_max = 5
 tau = 0.3
 dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/u_max)
 passos_tempo = 10000
+t_final = 1
 
 parede = int(ny/3)
 fator = 2
@@ -38,6 +39,7 @@ def parametros():
     print("Velocidade máxima em y: ", v_max)
     print("Total de iterações no tempo: ", passos_tempo)
     print("Tamanho da entrada bifurcação em pontos (se simulando bifurcação): ", parede)
+    print("Tempo: ", t_final)
     input("Pressione qualquer tecla para continuar")
     return 
 def bifurcacao_velocidades(u, v, fator):
@@ -129,6 +131,7 @@ def simulacao(u0, v0, p0):
     u_ant, v_ant = condicoes_contorno_velocidades_duto(u_ant, v_ant)
     p_ant = condicoes_contorno_pressao_duto(p_ant)
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
+    tt = 0
     # Iteração 
     parametros()
     for i in range(passos_tempo):
@@ -166,7 +169,7 @@ def simulacao(u0, v0, p0):
         p = np.copy(p_ant)
         p_novo = np.copy(p)
         j = 0
-        deltap=1
+        deltap = 1
         while j < it_pressao and deltap > tol:
             p_novo[1:-1, 1:-1] = (
               (dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1]))
@@ -192,18 +195,18 @@ def simulacao(u0, v0, p0):
         u_ant, v_ant, p_ant = u, v, p
 
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if plotar_evolucao:
-            plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
+        tt += dt
+        V_max = np.max(velocidade_modulo)
+        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', V_max, '|∆p| =', deltap)
+        if V_max > 50 or np.isnan(V_max):
+            break
+        if plotar_evolucao and i % plotar_a_cada == 0:
+            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
             plt.colorbar()
             plt.quiver(X, Y, u, v, color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()
-        if i % plotar_a_cada == 0:
-            V_max = np.max(velocidade_modulo)
-            print('It:', i, '/', passos_tempo, '||u||=', V_max, '|∆p|=', deltap)
-            if V_max > 50 or np.isnan(V_max):
-                break
     plt.show()
     return X, Y, u, v, p, velocidade_modulo
 if __name__ == '__main__':

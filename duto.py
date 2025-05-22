@@ -6,7 +6,7 @@ sim.comprimento = 10
 sim.altura = 1
 sim.nx = 20
 sim.ny = 40
-sim.Re = 10000
+sim.Re = 1000
 sim.dx = sim.comprimento / (sim.nx -1)
 sim.dy = sim.altura / (sim.ny -1)
 
@@ -17,7 +17,7 @@ sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_ma
 t_final = 10
 sim.passos_tempo = int(t_final / sim.dt)
 sim.it_pressao = 100
-sim.plotar_a_cada = 100
+sim.plotar_a_cada = 1
 
 # Modifica as condições de contorno internas
 
