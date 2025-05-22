@@ -130,12 +130,12 @@ def simulacao(u0, v0, p0):
 
     u_ant, v_ant = condicoes_contorno_velocidades_duto(u_ant, v_ant)
     p_ant = condicoes_contorno_pressao_duto(p_ant)
-    plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
-    tt = 0
+
     # Iteração 
     parametros()
+    plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
+    tt = 0
     for i in range(passos_tempo):
-        print(i)
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +
                                         (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2)
     

@@ -74,9 +74,6 @@ def condicoes_contorno_velocidades_bfs(u, v):
     return u, v
     
 def simulacao(u0, v0, p0):
-
-    sy = int(nx/5)
-    sx = int(nx/5)
     # Malha
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
@@ -102,6 +99,7 @@ def simulacao(u0, v0, p0):
     # Iteração 
     parametros()
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
+    tt = 0
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +
                                         (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2) # difusão igual ao do sor
@@ -155,8 +153,13 @@ def simulacao(u0, v0, p0):
 
         u_ant, v_ant, p_ant = u, v, p
         velocidade_modulo = (u**2 + v**2)**(0.5)
-        if plotar_evolucao:
-            plt.contourf(X, Y, velocidade_modulo, levels=30, cmap='viridis')
+        tt += dt
+        V_max = np.max(velocidade_modulo)
+        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', V_max, '|∆p| =', deltap)
+        if V_max > 50 or np.isnan(V_max):
+            break
+        if plotar_evolucao and i % plotar_a_cada == 0:
+            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
             plt.colorbar()
             plt.plot(X[:sx+1, sy], Y[:sx+1, sy], c='black')
             plt.plot(X[sx, :sy+1], Y[sx, :sy+1], c='black')
@@ -164,11 +167,6 @@ def simulacao(u0, v0, p0):
             plt.draw()
             plt.pause(0.005)
             plt.clf()
-        if i % plotar_a_cada == 0:
-            V_max = np.max(velocidade_modulo)
-            print('It:', i, '/', passos_tempo, '||u||=', V_max, '|∆p|=', deltap)
-            if V_max > 5:
-                break
     plt.show()
     print(u)
     return X, Y, u, v, p, velocidade_modulo

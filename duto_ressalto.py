@@ -10,18 +10,19 @@ sim.ny = 80
 sim.Re = 1000
 sim.dx = sim.comprimento/(sim.nx-1)
 sim.dy = sim.altura/(sim.ny-1)
-u_max = 5
-v_max = 5
+sim.u_max = 5
+sim.v_max = 5
 tau = 0.1
-sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
+sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/sim.u_max, sim.dy/sim.u_max)
+
 t_final = 10
 sim.passos_tempo = int(t_final/sim.dt)
 
 sim.it_pressao = 200
 sim.tol = 1e-2
 sim.plotar_a_cada = 100
-sim.sx = int(sim.nx/2)
-sim.sy = int(sim.ny/2)
+sim.sx = int(sim.nx/4)
+sim.sy = int(sim.ny/4)
 
 X, Y, u, v, p, velocidade_modulo = sim.simulacao(1, 0, 0)
 
