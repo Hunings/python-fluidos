@@ -14,6 +14,7 @@ sim.parede = int(sim.ny/3)
 sim.fator = 2 # n - 3
 sim.u_max = 10
 sim.v_max = 10
+sim.tol = 1e-2
 
 sim.dt = sim.tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/sim.u_max, sim.dy/sim.u_max)
 sim.t_final = 10

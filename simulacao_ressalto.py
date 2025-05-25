@@ -156,7 +156,7 @@ def simulacao(u0, v0, p0):
         tt += dt
         V_max = np.max(velocidade_modulo)
         print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', V_max, '|∆p| =', deltap)
-        if V_max > 50 or np.isnan(V_max):
+        if V_max > 10 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
             plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
