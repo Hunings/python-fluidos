@@ -102,16 +102,16 @@ def simulacao(u0, v0, p0):
     tt = 0
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +
-                                        (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2) # difusão igual ao do sor
+                                        (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2)
     
         conveccao_x[1:-1, 1:-1] = ((v_ant[1:-1, 2:] * u_ant[1:-1, 2:] - v_ant[1:-1, :-2] * u_ant[1:-1, :-2])/(2*dy) + 
-            (u_ant[2:, 1:-1]**2 - u_ant[:-2, 1:-1]**2)/(2*dx)) # igual ao do sor
+            (u_ant[2:, 1:-1]**2 - u_ant[:-2, 1:-1]**2)/(2*dx))
 
         # Velocidade u antes da correção da pressão
-        u_[1:-1, 1:-1] = u_ant[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1]) # tudo ok
+        u_[1:-1, 1:-1] = u_ant[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
 
         difusao_y[1:-1, 1:-1] = 1/Re * ((v_ant[2:, 1:-1] - 2*v_ant[1:-1, 1:-1] + v_ant[:-2, 1:-1]) / dx**2 +
-                                        (v_ant[1:-1, 2:] - 2*v_ant[1:-1, 1:-1] + v_ant[1:-1, :-2]) / dy**2) # tudo ok
+                                        (v_ant[1:-1, 2:] - 2*v_ant[1:-1, 1:-1] + v_ant[1:-1, :-2]) / dy**2)
         
         conveccao_y[1:-1, 1:-1] = (v_ant[2:, 1:-1]*u_ant[2:, 1:-1] - v_ant[:-2, 1:-1]*u_ant[:-2, 1:-1])/(2*dy) + (
             v_ant[1:-1, 2:]**2 - v_ant[1:-1, :-2]**2
@@ -159,7 +159,7 @@ def simulacao(u0, v0, p0):
         if V_max > 10 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
+            plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
             plt.colorbar()
             plt.plot(X[:sx+1, sy], Y[:sx+1, sy], c='black')
             plt.plot(X[sx, :sy+1], Y[sx, :sy+1], c='black')

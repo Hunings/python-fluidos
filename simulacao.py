@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#A pressão ainda está interferindo
-
 comprimento = 10
 altura = 10
 nx = 10
@@ -21,7 +19,6 @@ t_final = 1
 
 parede = int(ny/3)
 fator = 2
-
 it_pressao = 100
 plotar_a_cada = 1
 def parametros():
@@ -201,7 +198,7 @@ def simulacao(u0, v0, p0):
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
+            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='spring')
             plt.colorbar()
             plt.quiver(X, Y, u, v, color='white')
             plt.draw()

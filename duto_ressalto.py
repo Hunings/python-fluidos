@@ -7,20 +7,20 @@ sim.comprimento = 10
 sim.altura = 1
 sim.nx = 40
 sim.ny = 80
-sim.Re = 2000
+sim.Re = 100
 sim.dx = sim.comprimento/(sim.nx-1)
 sim.dy = sim.altura/(sim.ny-1)
-sim.u_max = 10
-sim.v_max = 10
-tau = 0.1
+sim.u_max = 5
+sim.v_max = 5
+tau = 1 
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/sim.u_max, sim.dy/sim.u_max)
 
-t_final = 100
+t_final = 1000
 sim.passos_tempo = int(t_final/sim.dt)
 
 sim.it_pressao = 100
-sim.tol = 1e-3
-sim.plotar_a_cada = 100
+sim.tol = 1e-2
+sim.plotar_a_cada = 10
 sim.sx = int(sim.nx/4)
 sim.sy = int(sim.ny/4)
 
@@ -45,16 +45,4 @@ plt.colorbar()
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title(f"Re = {sim.Re} t = {t_final}")
-plt.show()
-plt.figure(figsize=(50, 5))
-plt.contourf(X, Y, p)
-plt.colorbar()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.show()
-plt.contourf(X, Y, velocidade_modulo)
-plt.colorbar()
-plt.show()
-plt.contourf(X, Y, w)
-plt.colorbar()
 plt.show()

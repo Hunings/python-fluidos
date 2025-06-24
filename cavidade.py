@@ -4,15 +4,15 @@ from functools import partial
 
 sim.comprimento = 1
 sim.altura = 1
-sim.nx = 80
-sim.ny = 80
+sim.nx = 160
+sim.ny = 160
 sim.Re = 1000
 sim.dx = sim.comprimento / (sim.nx - 1)
 sim.dy = sim.altura / (sim.ny - 1)
 
 u_max = 10
 v_max = 10
-tau = 0.1
+tau = 0.5
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
 sim.t_final = 10
 

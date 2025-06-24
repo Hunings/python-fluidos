@@ -4,20 +4,20 @@ import matplotlib.pyplot as plt
 #Define as constantes da simulação
 sim.comprimento = 10
 sim.altura = 1
-sim.nx = 20
-sim.ny = 40
+sim.nx = 30
+sim.ny = 60
 sim.Re = 1000
 sim.dx = sim.comprimento / (sim.nx -1)
 sim.dy = sim.altura / (sim.ny -1)
 
 u_max = 3
 v_max = 3
-tau = 0.1
+tau = 0.5
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
-t_final = 10
+t_final = 100
 sim.passos_tempo = int(t_final / sim.dt)
 sim.it_pressao = 100
-sim.plotar_a_cada = 1
+sim.plotar_a_cada = 100
 
 # Modifica as condições de contorno internas
 
