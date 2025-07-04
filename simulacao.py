@@ -198,9 +198,8 @@ def simulacao(u0, v0, p0):
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='spring')
+            plt.contourf(X, Y, u, levels=100, cmap='jet')
             plt.colorbar()
-            plt.quiver(X, Y, u, v, color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()

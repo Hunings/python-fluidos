@@ -1,11 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
+'''
+Este código realiza uma simulação 2D de um fluido em um duto com ressalto utilizando diferenças finitas centradas,
+e um solver para a pressão utilizando o método iterativo de Jacobi.
 
-comprimento = 1
+Abaixo são definidas os parâmetros constantes do problema padrão, mas um código auxiliar deve ser utilizado para
+rodar uma simulação específica (um exemplo de código está junto a esse no repositório do GitHub duto_ressalto.py).
+
+A simulação principal consiste basicamente na função simulacao(), que inicia os arrays e o loop para a evolução temporal, além do cálculo da pressão,
+junto com condições de contorno para velocidade e pressão, definidas como as funções condicoes_contorno_pressao_bfs(p) e condicoes_contorno_velocidades_bfs(u, v).
+'''
+comprimento = 15
 altura = 1
-nx = 10
-ny = 100
-Re = 1
+nx = 150
+ny = 80
+Re = 100
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 
@@ -14,13 +23,13 @@ v_max = 5
 tol = 1e-2
 dt = 1e-5
 t_final = 1
-passos_tempo = 4000
+passos_tempo = 0
 
-it_pressao = 100
+it_pressao = 200
 plotar_a_cada = 1   
 
-sy = int(nx/5)
-sx = int(nx/5)
+sy = int(nx/7)
+sx = int(nx/2)
 
 def parametros():
     print("Parâmetros da simulação a seguir")
@@ -70,7 +79,6 @@ def condicoes_contorno_velocidades_bfs(u, v):
     # Velocidade no interior da borda
     u[:sx+1, :sy+1] = 0
     v[:sx+1, :sy+1] = 0
-
     return u, v
     
 def simulacao(u0, v0, p0):
@@ -155,15 +163,16 @@ def simulacao(u0, v0, p0):
         velocidade_modulo = (u**2 + v**2)**(0.5)
         tt += dt
         V_max = np.max(velocidade_modulo)
-        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', V_max, '|∆p| =', deltap)
-        if V_max > 10 or np.isnan(V_max):
+        u_maximo = np.max(u)
+        v_maximo = np.max(v)
+        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', u_maximo, '||v|| =', v_maximo, '|∆p| =', deltap)
+        if V_max > 100 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.contourf(X, Y, velocidade_modulo, cmap='viridis')
+            plt.contourf(X, Y, velocidade_modulo, levels=100, cmap='jet')
             plt.colorbar()
             plt.plot(X[:sx+1, sy], Y[:sx+1, sy], c='black')
             plt.plot(X[sx, :sy+1], Y[sx, :sy+1], c='black')
-            plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], color='white')
             plt.draw()
             plt.pause(0.005)
             plt.clf()
