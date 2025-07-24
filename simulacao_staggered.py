@@ -44,7 +44,7 @@ def condicoes_contorno_p(p):
     #Sul
     p[:, 0] = p[:, 1]
     #Norte
-    p[:, -1] = 0# p[:, -2]
+    p[:, -1] = p[:, -2]
     #Leste
     p[-1, :] = p[-2, :]
     #Oeste
@@ -99,7 +99,6 @@ def simulacao(u0, v0, p0):
         u_, v_ = condicoes_contorno_V(u_, v_)
 
         fonte = ((u_[1:, 1:-1] - u_[:-1, 1:-1])/dx + (v_[1:-1, 1:] - v_[1:-1, :-1])/dy)/dt #6x4  TALVEZ O PROBLEMA ESTEJA AQUI! na verdade com certeza está daqui pra baixo
-        fonte = condicoes_contorno_p(fonte)
         
         p_novo = np.copy(p) # pressão é 8x6
         j = 0
