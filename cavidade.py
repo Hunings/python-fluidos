@@ -6,7 +6,7 @@ sim.comprimento = 1
 sim.altura = 1
 sim.nx = 100
 sim.ny = 100
-sim.Re = 3000
+sim.Re = 100
 sim.dx = sim.comprimento / (sim.nx - 1)
 sim.dy = sim.altura / (sim.ny - 1)
 
@@ -15,9 +15,11 @@ v_max = 3
 tau = 0.1
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
 sim.t_final = 200
+sim.dt=1e-3
 
 sim.tol = 1e-2
 sim.passos_tempo = int(sim.t_final/sim.dt)
+sim.passos_tempo=5000
 sim.it_pressao = 100
 sim.plotar_a_cada = 100
 

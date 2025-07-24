@@ -13,7 +13,7 @@ junto com condições de contorno para velocidade e pressão, definidas como as 
 comprimento = 15
 altura = 1
 nx = 150
-ny = 80
+ny = 100
 Re = 100
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
@@ -159,7 +159,7 @@ def simulacao(u0, v0, p0):
         # Condições de Contorno Velocidades Finais
         u, v = condicoes_contorno_velocidades_bfs(u, v)
 
-        u_ant, v_ant, p_ant = u, v, p
+        u_ant[:], v_ant[:], p_ant[:] = u, v, p
         velocidade_modulo = (u**2 + v**2)**(0.5)
         tt += dt
         V_max = np.max(velocidade_modulo)

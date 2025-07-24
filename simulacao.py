@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-comprimento = 10
-altura = 10
-nx = 10
-ny = 10
-Re = 10
+comprimento = 15
+altura = 1
+nx = 70
+ny = 50
+Re = 1000
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 tol = 1e-2
@@ -140,9 +140,6 @@ def simulacao(u0, v0, p0):
             u_ant[2:, 1:-1]**2 - u_ant[:-2, 1:-1]**2
         )/(2*dx)
     
-        
-        dpdx[1:-1, 1:-1] = (p_ant[2:, 1:-1] - p_ant[:-2, 1:-1])/(2*dx) 
-
         # Velocidade u antes da correção da pressão
         u_[1:-1, 1:-1] = u_ant[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
 
@@ -153,8 +150,6 @@ def simulacao(u0, v0, p0):
             v_ant[1:-1, 2:]**2 - v_ant[1:-1, :-2]**2
         )/(2*dy)
         
-        dpdy[1:-1, 1:-1] = (p_ant[1:-1, 2:] - p_ant[1:-1, :-2])/(2*dy)
-
         #Velocidade v antes da correção da pressão
         v_[1:-1, 1:-1] = v_ant[1:-1, 1:-1] + dt*(difusao_y[1:-1, 1:-1] - conveccao_y[1:-1, 1:-1])
 
@@ -198,7 +193,7 @@ def simulacao(u0, v0, p0):
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.contourf(X, Y, u, levels=100, cmap='jet')
+            plt.contourf(X, Y, p, levels=100, cmap='jet')
             plt.colorbar()
             plt.draw()
             plt.pause(0.005)

@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-comprimento = 35
-altura = 2
-nx = 61
-ny = 61
-Re = 1000
+comprimento = 1
+altura = 1
+nx = 99
+ny = 99
+Re = 100
 dx = comprimento / (nx-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 dy = altura / (ny-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 
@@ -14,9 +14,9 @@ v_max = 5
 tol = 1e-2
 dt = 1e-3
 t_final = 1
-passos_tempo = 1000
+passos_tempo = 5000
 
-it_pressao = 200
+it_pressao = 100
 plotar_a_cada = 1   
 
 sy = int(nx/5)
@@ -28,23 +28,23 @@ def condicoes_contorno_V(u, v):
     v[:, 0] = 0 # No-Slip
 
     #Norte
-    u[:, -1] = -u[:, -2] # No-Slip
-    v[:, -1] = 0 # No-Slip
+    u[:, -1] = 2 - u[:, -2] # Dirichlet = 1
+    v[:, -1] = 0 # Dirichlet = 0
 
     #Leste
-    v[-1, :] = v[-2, :] # Neumann
-    u[-1, :] = u[-2, :] # Neumann
+    v[-1, :-1] = -v[-2, :-1] # No-slip
+    u[-1, :-1] = 0 # No-slip
 
     #Oeste
-    v[0, :] = -v[1, :] # Dirichlet = 0
-    u[0, :] = 1.0 #Dirichlet
+    v[0, :-1] = -v[1, :-1] # No-slip
+    u[0, :-1] = 0 # No-slip
 
     return u, v
 def condicoes_contorno_p(p):
     #Sul
     p[:, 0] = p[:, 1]
     #Norte
-    p[:, -1] = p[:, -2]
+    p[:, -1] = 0# p[:, -2]
     #Leste
     p[-1, :] = p[-2, :]
     #Oeste
@@ -128,21 +128,29 @@ def simulacao(u0, v0, p0):
         
         t += dt
 
-        u_maximo = np.max(u)
-        v_maximo = np.max(v)
+        u_maximo = np.max(u[1:-1, 1:-1])
+        v_maximo = np.max(v[1:-1, 1:-1])
         print('It:', it, '/', passos_tempo, f"t = {t:.3} / {t_final}", '||u|| =', u_maximo, '||v|| =', v_maximo, '|∆p| =', deltap)
         um, vm = (u[:, :-1] + u[:, 1:])/2, (v[1:, :] + v[:-1, :])/2
         V = (um**2+vm**2)**(1/2)
         p_med = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
         if plotar_evolucao:
-            plt.contourf(X, Y, V, levels=200, cmap='jet')
+            plt.contourf(X, Y, V, levels=30, cmap='jet')
+            plt.quiver(X.T, Y.T, um.T, vm.T)
             plt.colorbar()
             plt.draw()
             plt.pause(0.1)
             plt.clf()
     plt.show()
-    return X, Y, um, vm, p_med
-X, Y, u, v, p = simulacao(1, 0, 0)
+    return X, Y, um, vm, V, p_med
+X, Y, u, v, V, p = simulacao(0, 0, 0)
+plt.figure(figsize=(11, 10))
+plt.streamplot(X.T, Y.T, u.T, v.T, color=V.T, cmap='jet')
+plt.xlabel('X')
+plt.ylabel('Y')  
+plt.title(f"Re = {Re} t = {t_final}, staggered")
+plt.colorbar()
+plt.show()
 plt.title('Velocidade horizontal u')
 plt.contourf(X, Y, u, levels=200, cmap='jet')
 plt.colorbar()
@@ -151,7 +159,7 @@ plt.title('Velocidade vertical v')
 plt.contourf(X, Y, v, levels=200, cmap='jet')
 plt.colorbar()
 plt.show()
-plt.title('Pressãso')
+plt.title('Pressão')
 plt.contourf(X, Y, p, levels=200, cmap='jet')
 plt.colorbar()
 plt.show()
