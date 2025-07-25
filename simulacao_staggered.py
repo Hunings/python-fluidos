@@ -3,18 +3,18 @@ import numpy as np
 
 comprimento = 1
 altura = 1
-nx = 99
-ny = 99
-Re = 100
+nx = 50
+ny = 50
+Re = 1000
 dx = comprimento / (nx-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 dy = altura / (ny-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 
 u_max = 5
 v_max = 5
 tol = 1e-2
-dt = 1e-3
+dt = 1e-2
 t_final = 1
-passos_tempo = 5000
+passos_tempo = 2000
 
 it_pressao = 100
 plotar_a_cada = 1   
@@ -23,6 +23,24 @@ sy = int(nx/5)
 sx = int(nx/5)
 
 def condicoes_contorno_V(u, v):
+    #Sul
+    u[:, 0] = -u[:, 1] # No-Slip
+    v[:, 0] = 0 # No-Slip
+
+    #Norte
+    u[:, -1] = -u[:, -2] # No-slip
+    v[:, -1] = 0 # No-slip
+
+    #Leste
+    v[-1, :-1] = v[-2, :-1] # Neumann
+    u[-1, :-1] = u[-2, :-1] # Neumann
+
+    #Oeste
+    v[0, :-1] = -v[1, :-1] # Dirichlet = 0
+    u[0, :-1] = 1.0 # Dirichlet
+
+    return u, v
+def condicoes_contorno_V_cavidade(u, v):
     #Sul
     u[:, 0] = -u[:, 1] # No-Slip
     v[:, 0] = 0 # No-Slip
@@ -115,6 +133,7 @@ def simulacao(u0, v0, p0):
             p_novo = condicoes_contorno_p(p_novo)
             p[:] = p_novo
             j+=1
+        print(j)
 
         dpdx = (p_novo[2:-1, 1:-1] - p_novo[1:-2, 1:-1])/(dx) #7x6
         dpdy = (p_novo[1:-1, 2:-1] - p_novo[1:-1, 1:-2])/(dy) #8x5
@@ -134,15 +153,14 @@ def simulacao(u0, v0, p0):
         V = (um**2+vm**2)**(1/2)
         p_med = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
         if plotar_evolucao:
-            plt.contourf(X, Y, V, levels=30, cmap='jet')
-            plt.quiver(X.T, Y.T, um.T, vm.T)
+            plt.contourf(X, Y, V, levels=100, cmap='jet')
             plt.colorbar()
             plt.draw()
             plt.pause(0.1)
             plt.clf()
     plt.show()
     return X, Y, um, vm, V, p_med
-X, Y, u, v, V, p = simulacao(0, 0, 0)
+X, Y, u, v, V, p = simulacao(1, 0, 0)
 plt.figure(figsize=(11, 10))
 plt.streamplot(X.T, Y.T, u.T, v.T, color=V.T, cmap='jet')
 plt.xlabel('X')

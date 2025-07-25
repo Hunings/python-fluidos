@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 comprimento = 15
 altura = 1
-nx = 70
-ny = 50
-Re = 1000
+nx = 40
+ny = 40
+Re = 100
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 tol = 1e-2
@@ -21,6 +21,10 @@ parede = int(ny/3)
 fator = 2
 it_pressao = 100
 plotar_a_cada = 1
+
+pos_x = int(nx/2)
+pos_y = 0#int(ny/2)
+
 def parametros():
     print("Parâmetros da simulação a seguir")
     print("Altura: ", altura)
@@ -39,6 +43,42 @@ def parametros():
     print("Tempo: ", t_final)
     input("Pressione qualquer tecla para continuar")
     return 
+def obs_velocidades(u, v):
+    #Norte
+    u[:, -1] = 0
+    v[:, -1] = 0
+    #Sul
+    u[:, 0] = 0
+    v[:, 0] = 0
+    #Leste
+    u[-1, 1:-1] = u[-2, 1:-1]
+    v[-1, 1:-1] = v[-2, 1:-1]
+    #Oeste
+    u[0, 1:-1] = 1.0
+    v[0, 1:-1] = 0.0
+
+    #Obstáculo
+    u[pos_x:pos_x+8, pos_y:pos_y+8] = 0
+    v[pos_x:pos_x+8, pos_y:pos_y+8] = 0
+    return u, v
+def obs_pressao(p):
+    #Duto padrão
+    p[-1, :] = p[-2, :]
+    p[:, -1] = p[:, -2]
+    p[:, 0] = p[:, 1]
+    p[0, :] = p[1, :]
+
+    #Obstáculo
+    p[pos_x:pos_x+8, pos_y+8] = p[pos_x:pos_x+8, pos_y+9]
+    p[pos_x:pos_x+8, pos_y] = p[pos_x:pos_x+8, pos_y-1]
+
+    p[pos_x, pos_y:pos_y+8] = p[pos_x-1, pos_y:pos_y+8]
+    p[pos_x+8, pos_y:pos_y+8] = p[pos_x+9, pos_y:pos_y+8]
+
+    p[pos_x:pos_x+8, pos_y:pos_y+8] = 0
+
+    return p
+
 def bifurcacao_velocidades(u, v, fator):
     # Paredes
     u[:, 0] = 0
@@ -146,7 +186,7 @@ def simulacao(u0, v0, p0):
         difusao_y[1:-1, 1:-1] = 1/Re * ((v_ant[2:, 1:-1] - 2*v_ant[1:-1, 1:-1] + v_ant[:-2, 1:-1]) / dx**2 +
                                         (v_ant[1:-1, 2:] - 2*v_ant[1:-1, 1:-1] + v_ant[1:-1, :-2]) / dy**2)
         
-        conveccao_y[1:-1, 1:-1] = (v_ant[2:, 1:-1]*u_ant[2:, 1:-1] - v_ant[:-2, 1:-1]*u_ant[:-2, 1:-1])/(2*dy) + (
+        conveccao_y[1:-1, 1:-1] = (v_ant[2:, 1:-1]*u_ant[2:, 1:-1] - v_ant[:-2, 1:-1]*u_ant[:-2, 1:-1])/(2*dx) + (
             v_ant[1:-1, 2:]**2 - v_ant[1:-1, :-2]**2
         )/(2*dy)
         
