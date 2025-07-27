@@ -24,7 +24,6 @@ sim.it_pressao = 100
 sim.plotar_a_cada = 100
 
 sim.condicoes_contorno_velocidades_duto = partial(sim.condicoes_contorno_velocidades_cavidade)
-sim.condicoes_contorno_pressao_duto = partial(sim.condicoes_contorno_pressao_cavidade)
 
 X, Y, u, v, p, velocidade_modulo = sim.simulacao(0, 0, 0)
 

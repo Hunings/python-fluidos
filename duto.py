@@ -14,9 +14,8 @@ u_max = 3
 v_max = 3
 tau = 0.5
 sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
-sim.dt = 1e-6
 t_final = 100
-sim.passos_tempo = 100 #int(t_final / sim.dt)
+sim.passos_tempo = int(t_final / sim.dt)
 sim.it_pressao = 100
 sim.plotar_a_cada = 100
 

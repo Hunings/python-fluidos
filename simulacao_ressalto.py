@@ -10,26 +10,26 @@ rodar uma simulação específica (um exemplo de código está junto a esse no r
 A simulação principal consiste basicamente na função simulacao(), que inicia os arrays e o loop para a evolução temporal, além do cálculo da pressão,
 junto com condições de contorno para velocidade e pressão, definidas como as funções condicoes_contorno_pressao_bfs(p) e condicoes_contorno_velocidades_bfs(u, v).
 '''
-comprimento = 15
-altura = 1
-nx = 150
-ny = 100
-Re = 100
+comprimento = 0
+altura = 0
+nx = 0
+ny = 0
+Re = 0
 dx = comprimento / (nx-1)
 dy = altura / (ny-1)
 
-u_max = 5
-v_max = 5
-tol = 1e-2
-dt = 1e-5
-t_final = 1
+u_max = 0
+v_max = 0
+tol = 0
+dt = 0
+t_final = 0
 passos_tempo = 0
 
-it_pressao = 200
-plotar_a_cada = 1   
+it_pressao = 0
+plotar_a_cada = 0   
 
-sy = int(nx/7)
-sx = int(nx/2)
+sy = 0
+sx = 0
 
 def parametros():
     print("Parâmetros da simulação a seguir")
@@ -50,28 +50,27 @@ def parametros():
     return 
 def condicoes_contorno_pressao_bfs(p):
     # Paredes   
-    p[-1, :] = p[-2, :] # leste
-    p[:, -1] = p[:, -2] # norte
+    p[-1, :] = p[-2, :] # Leste
+    p[:, -1] = p[:, -2] # Norte
+    p[:, 0] = p[:, 1] # Sul
+    p[0, :] = p[1, :] # Oeste
 
     # Paredes Duto
-    p[sx:, 0] = p[sx:, 1] #dpdy = 0 sul
-    p[:sx+1, :sy+1] = 0# p = 0 no ressalto
-    p[sx, :sy+1] = p[sx+1, :sy+1] #dpdx = 0,  parede leste ressalto
-    p[:sx, sy] = p[:sx, sy+1] #dpdy = 0, parede norte do ressalto
-
-    p[0, sy+1:-1] = p[1, sy+1:-1]
+    p[:sx+1, :sy+1] = np.pi # Qualquer valor não deve interferir no resto da simulação
+    p[sx, :sy+1] = p[sx+1, :sy+1] # Neumann homogênea na parede leste do ressalto
+    p[:sx+1, sy] = p[:sx+1, sy+1] # Neumann homogênea na parede norte do ressalto
 
     return p
 def condicoes_contorno_velocidades_bfs(u, v):
-    u[:, 0] = 0 # sul
+    u[:, 0] = 0 # Sul
     v[:, 0] = 0
     
-    u[:, -1] = 0 # norte
+    u[:, -1] = 0 # Norte
     v[:, -1] = 0
     
     # Entrada
-    u[0, sy+1:-1] = 1
-    v[0, sy+1:-1] = 0
+    u[0, sy+1:-1] = 1.
+    v[0, sy+1:-1] = 0.
     # Saída
     u[-1, :] = u[-2, :]
     v[-1, :] = v[-2, :]
@@ -79,8 +78,10 @@ def condicoes_contorno_velocidades_bfs(u, v):
     # Velocidade no interior da borda
     u[:sx+1, :sy+1] = 0
     v[:sx+1, :sy+1] = 0
+
     return u, v
-    
+def pressao(p):
+    return p
 def simulacao(u0, v0, p0):
     # Malha
     x = np.linspace(0.0, comprimento, nx)
@@ -100,6 +101,8 @@ def simulacao(u0, v0, p0):
     conveccao_x, conveccao_y = np.zeros_like(u_ant), np.zeros_like(v_ant)
     dpdx, dpdy = np.zeros_like(p_ant), np.zeros_like(p_ant)
     fonte = np.zeros_like(p_ant)
+    p_novo = np.zeros_like(p_ant)
+    p = np.zeros_like(p_ant)
 
     u_ant, v_ant = condicoes_contorno_velocidades_bfs(u_ant, v_ant)
     p_ant = condicoes_contorno_pressao_bfs(p_ant)
@@ -133,8 +136,8 @@ def simulacao(u0, v0, p0):
         fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
 
         # Resolve a Pressão iterativamente
-        p = np.copy(p_ant)
-        p_novo = np.copy(p)
+        p[:] = p_ant
+        p_novo[:] = p
         j = 0
         deltap=1
         while j < it_pressao and deltap > tol:
@@ -159,7 +162,7 @@ def simulacao(u0, v0, p0):
         # Condições de Contorno Velocidades Finais
         u, v = condicoes_contorno_velocidades_bfs(u, v)
 
-        u_ant[:], v_ant[:], p_ant[:] = u, v, p
+        u_ant, v_ant, p_ant = u, v, p
         velocidade_modulo = (u**2 + v**2)**(0.5)
         tt += dt
         V_max = np.max(velocidade_modulo)

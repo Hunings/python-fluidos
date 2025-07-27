@@ -133,7 +133,6 @@ def simulacao(u0, v0, p0):
             p_novo = condicoes_contorno_p(p_novo)
             p[:] = p_novo
             j+=1
-        print(j)
 
         dpdx = (p_novo[2:-1, 1:-1] - p_novo[1:-2, 1:-1])/(dx) #7x6
         dpdy = (p_novo[1:-1, 2:-1] - p_novo[1:-1, 1:-2])/(dy) #8x5
