@@ -1,6 +1,5 @@
 import simulacao as sim
 import matplotlib.pyplot as plt
-from functools import partial
 
 sim.comprimento = 1
 sim.altura = 1
@@ -23,7 +22,7 @@ sim.passos_tempo = 5000
 sim.it_pressao = 100
 sim.plotar_a_cada = 100
 
-sim.condicoes_contorno_velocidades_duto = partial(sim.condicoes_contorno_velocidades_cavidade)
+sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_cav
 
 X, Y, u, v, p, velocidade_modulo = sim.simulacao(0, 0, 0)
 
