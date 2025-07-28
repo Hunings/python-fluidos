@@ -192,10 +192,22 @@ def malha(comprimento, altura, nx, ny):
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
     return X, Y
-def ver_V(X, Y, V):
-    plt.figure(figsize=(50,5))
-    plt.contourf()
-    plt.colorbar()
+def plotar_contorno(X, Y, V, Re, t_final, titulo):
+    plt.figure(figsize=(50, 5))
+    plt.contourf(X, Y, V, levels=200, cmap='jet')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title(f"{titulo}, Re = {Re}, t = {t_final}")
+    plt.colorbar(orientation='horizontal')
+    plt.show()
+    return
+def plotar_streamlines(X, Y, u, v, V, Re, t_final):
+    plt.figure(figsize=(50, 5))
+    plt.streamplot(X.T, Y.T, u.T, v.T, color=V.T, cmap='jet')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title(f"Re = {Re}, t = {t_final}")
+    plt.colorbar(orientation='horizontal')
     plt.show()
     return
 def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2):
