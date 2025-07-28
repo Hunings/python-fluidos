@@ -12,8 +12,7 @@ A simulação principal consiste basicamente na função simulacao(), que inicia
 junto com condições de contorno para velocidade e pressão, definidas como as funções condicoes_contorno_pressao(p) e condicoes_contorno_velocidades(u, v).
 '''
 
-parede = 0
-fator = 3
+abertura = 0
 pos_x = 0
 pos_y = 0
 sx = 0
@@ -83,7 +82,7 @@ def condicoes_contorno_velocidades_bif(u, v):
     u[:, -1] = 0 #Norte
     v[:, -1] = 0
     #Entrada Dirichlet
-    u[0, (fator-1)*parede:fator*parede+1] = 1.
+    u[0, abertura:2*abertura] = 1.
     #Saída Neumann homogênea
     u[-1, :] = u[-2, :]
     v[-1, :] = v[-2, :]
@@ -95,7 +94,7 @@ def condicoes_contorno_pressao_bif(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Entrada Neumann homogênea
-    p[0, (fator-1)*parede:fator*parede+1] = p[1, (fator-1)*parede:fator*parede+1]
+    p[0, abertura:2*abertura] = p[1, abertura:2*abertura]
     return p
 def condicoes_contorno_pressao_duto(p):
     #Paredes Neumann homogênea
