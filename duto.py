@@ -1,49 +1,28 @@
-import simulacao as sim
+import simulacao as s
 import matplotlib.pyplot as plt
 
 #Define as constantes da simulação
-sim.comprimento = 15
-sim.altura = 1
-sim.nx = 70
-sim.ny = 50
-sim.Re = 1000
-sim.dx = sim.comprimento / (sim.nx -1)
-sim.dy = sim.altura / (sim.ny -1)
-
-u_max = 3
-v_max = 3
-tau = 0.5
-sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
+comprimento = 15
+altura = 1
+nx = 100
+ny = 50
+Re = 100
+u_max = 2
+v_max = 2
+tau = 0.9
 t_final = 100
-sim.passos_tempo = int(t_final / sim.dt)
-sim.it_pressao = 100
-sim.plotar_a_cada = 100
+tol = 1e-4
+it_pressao = 100
+plotar_a_cada = 10
+u0, v0, p0 = 1, 0, 0
 
-# Modifica as condições de contorno internas
-
-sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_duto
-sim.condicoes_contorno_pressao_duto = sim.condicoes_contorno_pressao_duto
+#Condições de contorno internas padrão
 
 #Executa a simulação
-X, Y, u, v, p, velocidade_modulo = sim.simulacao(1, 0, 1)
+X, Y, u, v, p, V, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
 
 #Visualização 
 
-plt.figure(figsize=(12, 6))
-plt.quiver(X, Y, u, v, velocidade_modulo, scale=40)
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.colorbar()
-plt.show()
-plt.figure(figsize=(12, 6))
-plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='viridis')
-plt.colorbar()
-plt.xlabel('X')
-plt.ylabel('Y')  
-plt.show()
-plt.figure(figsize=(12, 6))
-plt.contourf(X, Y, p)
-plt.colorbar()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.show()
+s.plotar_contorno(X, Y, V, Re, t_final, 'Módulo da Velocidade', 0)
+s.plotar_streamlines(X, Y, u, v, V, Re, t_final, 0)
+s.plotar_vetores(X, Y, u, v, V, Re, t_final, 60, 2, 0)

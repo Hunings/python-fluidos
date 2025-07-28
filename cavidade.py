@@ -20,12 +20,12 @@ v0 = p0 = 0
 
 s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_cav
 
-X, Y, u, v, p, velocidade_modulo, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, 'quadrado')
+X, Y, u, v, p, V, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, 'quadrado')
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 
 #Visualização 
 
-s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade', 1)
-s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, 1)
-s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 1, 1)
+s.plotar_contorno(X, Y, V, Re, t_final, 'Módulo da Velocidade', 1)
+s.plotar_streamlines(X, Y, u, v, V, Re, t_final, 1)
+s.plotar_vetores(X, Y, u, v, V, Re, t_final, 1, 1)
