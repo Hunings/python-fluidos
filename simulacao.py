@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from time import perf_counter
 '''
 Este código realiza uma simulação 2D de um fluido em um duto utilizando diferenças finitas centradas,
 e um solver para a pressão utilizando o método iterativo de Jacobi.
@@ -163,8 +164,27 @@ def condicoes_contorno_velocidades_cav(u, v):
     u[1:-1, -1] = 1. #Norte
     v[:, -1] = 0.
     return u, v
-
+def pressao(fonte, p, p_novo):
+    #p = np.copy(p_ant)
+    p_novo = np.copy(p)
+    j = 0
+    deltap = 1
+    while j < it_pressao and deltap > tol:
+            p_novo[1:-1, 1:-1] = (
+              (dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1]))
+              +
+              (dx**2 * (p[1:-1, 2:] + p[1:-1, :-2]))
+              -
+              (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/(2 * (dx**2 + dy**2))
+            # Condições de Contorno Pressão
+            p_novo = condicoes_contorno_pressao_duto(p_novo)
+            deltap = np.max(np.abs(p-p_novo))
+            p[:] = p_novo
+            j+=1
+    return p
 def simulacao(u0, v0, p0):
+    #Conta tempo de simulação
+    inicio = perf_counter()
     # Malha
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
@@ -172,52 +192,51 @@ def simulacao(u0, v0, p0):
     X, Y = np.transpose(X), np.transpose(Y)
 
     # Condições Iniciais
-    u_ant = u0*np.ones((nx, ny))
-    v_ant = v0*np.ones((nx, ny))
-    p_ant = p0*np.ones((nx, ny))
+    u = u0*np.ones((nx, ny))
+    v = v0*np.ones((nx, ny))
+    p = p0*np.ones((nx, ny))
 
     # Arrays 
-    u_, v_ = np.zeros_like(u_ant), np.zeros_like(v_ant)
-    u, v = np.zeros_like(u_ant), np.zeros_like(v_ant)
-    difusao_x, difusao_y = np.zeros_like(u_ant), np.zeros_like(v_ant)
-    conveccao_x, conveccao_y = np.zeros_like(u_ant), np.zeros_like(v_ant)
-    dpdx, dpdy = np.zeros_like(p_ant), np.zeros_like(p_ant)
-    fonte = np.zeros_like(p_ant)
+    u_, v_ = np.zeros((nx, ny)), np.zeros((nx, ny))
+    u_novo, v_novo, p_novo = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
+    difusao_x, difusao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
+    conveccao_x, conveccao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
+    dpdx, dpdy = np.zeros((nx, ny)), np.zeros((nx, ny))
+    fonte = np.zeros((nx, ny))
 
-    u_ant, v_ant = condicoes_contorno_velocidades_duto(u_ant, v_ant)
-    p_ant = condicoes_contorno_pressao_duto(p_ant)
+    u, v = condicoes_contorno_velocidades_duto(u, v)
+    p = condicoes_contorno_pressao_duto(p)
 
     # Iteração 
     parametros()
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
     tt = 0
     for i in range(passos_tempo):
-        difusao_x[1:-1, 1:-1] = 1/Re * ((u_ant[2:, 1:-1] - 2*u_ant[1:-1, 1:-1] + u_ant[:-2, 1:-1]) / dx**2 +
-                                        (u_ant[1:-1, 2:] - 2*u_ant[1:-1, 1:-1] + u_ant[1:-1, :-2]) / dy**2)
+        difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
+                                        (u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]) / dy**2)
     
-        conveccao_x[1:-1, 1:-1] = (v_ant[1:-1, 2:] * u_ant[1:-1, 2:] - v_ant[1:-1, :-2] * u_ant[1:-1, :-2])/(2*dy) + (
-            u_ant[2:, 1:-1]**2 - u_ant[:-2, 1:-1]**2
+        conveccao_x[1:-1, 1:-1] = (v[1:-1, 2:] * u[1:-1, 2:] - v[1:-1, :-2] * u[1:-1, :-2])/(2*dy) + (
+            u[2:, 1:-1]**2 - u[:-2, 1:-1]**2
         )/(2*dx)
     
         # Velocidade u antes da correção da pressão
-        u_[1:-1, 1:-1] = u_ant[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
+        u_[1:-1, 1:-1] = u[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
 
-        difusao_y[1:-1, 1:-1] = 1/Re * ((v_ant[2:, 1:-1] - 2*v_ant[1:-1, 1:-1] + v_ant[:-2, 1:-1]) / dx**2 +
-                                        (v_ant[1:-1, 2:] - 2*v_ant[1:-1, 1:-1] + v_ant[1:-1, :-2]) / dy**2)
+        difusao_y[1:-1, 1:-1] = 1/Re * ((v[2:, 1:-1] - 2*v[1:-1, 1:-1] + v[:-2, 1:-1]) / dx**2 +
+                                        (v[1:-1, 2:] - 2*v[1:-1, 1:-1] + v[1:-1, :-2]) / dy**2)
         
-        conveccao_y[1:-1, 1:-1] = (v_ant[2:, 1:-1]*u_ant[2:, 1:-1] - v_ant[:-2, 1:-1]*u_ant[:-2, 1:-1])/(2*dx) + (
-            v_ant[1:-1, 2:]**2 - v_ant[1:-1, :-2]**2
+        conveccao_y[1:-1, 1:-1] = (v[2:, 1:-1]*u[2:, 1:-1] - v[:-2, 1:-1]*u[:-2, 1:-1])/(2*dx) + (
+            v[1:-1, 2:]**2 - v[1:-1, :-2]**2
         )/(2*dy)
         
         #Velocidade v antes da correção da pressão
-        v_[1:-1, 1:-1] = v_ant[1:-1, 1:-1] + dt*(difusao_y[1:-1, 1:-1] - conveccao_y[1:-1, 1:-1])
+        v_[1:-1, 1:-1] = v[1:-1, 1:-1] + dt*(difusao_y[1:-1, 1:-1] - conveccao_y[1:-1, 1:-1])
 
         u_, v_ = condicoes_contorno_velocidades_duto(u_, v_)
 
         fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
 
         # Resolve a Pressão iterativamente
-        p = np.copy(p_ant)
         p_novo = np.copy(p)
         j = 0
         deltap = 1
@@ -234,16 +253,16 @@ def simulacao(u0, v0, p0):
             p[:] = p_novo
             j+=1
 
-        dpdx[1:-1, 1:-1] = (p[2:, 1:-1] - p[:-2, 1:-1])/(2*dx)
-        dpdy[1:-1, 1:-1] = (p[1:-1, 2:] - p[1:-1, :-2])/(2*dy)
+        dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
+        dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
        
-        u[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
-        v[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
+        u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
+        v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
 
         # Condições de Contorno Velocidades Finais
         u, v = condicoes_contorno_velocidades_duto(u, v)
 
-        u_ant, v_ant, p_ant = u, v, p
+        u, v, p = u_novo, v_novo, p_novo
 
         V = (u**2 + v**2)**(0.5)
         tt += dt
@@ -257,5 +276,7 @@ def simulacao(u0, v0, p0):
             plt.draw()
             plt.pause(0.005)
             plt.clf()
+    fim = perf_counter()
+    tempo = fim - inicio
     plt.show()
-    return X, Y, u, v, p, V
+    return X, Y, u, v, p, V, tempo
