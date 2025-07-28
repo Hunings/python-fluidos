@@ -192,6 +192,15 @@ def malha(comprimento, altura, nx, ny):
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
     return X, Y
+def ver_V(X, Y, V):
+    plt.figure(figsize=(50,5))
+    plt.contourf()
+    plt.colorbar()
+    plt.show()
+    return
+def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2):
+    print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
+    return
 def simulacao(u0, v0, p0):
     #Conta tempo de simulação
     inicio = perf_counter()
@@ -215,10 +224,10 @@ def simulacao(u0, v0, p0):
     u, v = condicoes_contorno_velocidades_duto(u, v)
     p = condicoes_contorno_pressao_duto(p)
 
-    # Iteração 
     parametros()
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
-    tt = 0
+    tempo_transcorrido = 0
+    # Iteração 
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
                                         (u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]) / dy**2)
@@ -260,10 +269,13 @@ def simulacao(u0, v0, p0):
 
         u, v, p = u_novo, v_novo, p_novo
 
+        tempo_transcorrido += dt
+
         V = (u**2 + v**2)**(0.5)
-        tt += dt
         V_max = np.max(V)
-        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
+
+        informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2)
+
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
