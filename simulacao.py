@@ -11,47 +11,14 @@ rodar uma simulação específica (um exemplo de código está junto a esse no r
 A simulação principal consiste basicamente na função simulacao(), que inicia os arrays e o loop para a evolução temporal, além do cálculo da pressão,
 junto com condições de contorno para velocidade e pressão, definidas como as funções condicoes_contorno_pressao(p) e condicoes_contorno_velocidades(u, v).
 '''
-comprimento = 0
-altura = 0
-nx = 0
-ny = 0
-Re = 0
-dx = 0
-dy = 0
-tol = 0
-u_max = 0
-v_max = 0
-tau = 0
-dt = 0
-passos_tempo = 0
-t_final = 0
+
 parede = 0
-fator = 0
-it_pressao = 0
-plotar_a_cada = 0
+fator = 3
 pos_x = 0
 pos_y = 0
 sx = 0
 sy = 0
 
-def parametros():
-    print("Parâmetros da simulação a seguir")
-    print("Altura: ", altura)
-    print("Comprimento: ", comprimento)
-    print("Número de pontos x: ", nx)
-    print("Número de pontos y: ", ny)
-    print("Número de Reynolds: ", Re)
-    print("Espaçamento x: ", dx)
-    print("Espaçamento y: ", dy)
-    print("Passo de tempo: ", dt)
-    print("Tolerância na diferença de pressão: ", tol)
-    print("Velocidade máxima em x: ", u_max)
-    print("Velocidade máxima em y: ", v_max)
-    print("Total de iterações no tempo: ", passos_tempo)
-    print("Tamanho da entrada bifurcação em pontos (se simulando bifurcação): ", parede)
-    print("Tempo: ", t_final)
-    input("Pressione qualquer tecla para continuar")
-    return 
 def condicoes_contorno_pressao_bfs(p):
     #Paredes Neumann homogênea
     p[-1, :] = p[-2, :] #Leste
@@ -109,21 +76,19 @@ def condicoes_contorno_pressao_obs(p):
     #Interior do obstáculo
     p[pos_x:pos_x+8, pos_y:pos_y+8] = np.pi
     return p
-def condicoes_contorno_velocidades_bif(u, v, fator):
+def condicoes_contorno_velocidades_bif(u, v):
     #Paredes No-Slip
     u[:, 0] = 0 #Sul
     v[:, 0] = 0
     u[:, -1] = 0 #Norte
     v[:, -1] = 0
-    u[0, :] = 0 #Oeste
-    v[0, :] = 0
     #Entrada Dirichlet
-    u[0, (fator-1)*parede:fator*parede+1] = 1
+    u[0, (fator-1)*parede:fator*parede+1] = 1.
     #Saída Neumann homogênea
     u[-1, :] = u[-2, :]
     v[-1, :] = v[-2, :]
     return u, v
-def condicoes_contorno_pressao_bif(p, fator):
+def condicoes_contorno_pressao_bif(p):
     #Paredes Neumman homogênea
     p[-1, :] = p[-2, :] #Leste
     p[:, -1] = p[:, -2] #Norte
@@ -164,7 +129,7 @@ def condicoes_contorno_velocidades_cav(u, v):
     u[1:-1, -1] = 1. #Norte
     v[:, -1] = 0.
     return u, v
-def pressao(fonte, p, p_novo, dx, dy):
+def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
     j = 0
     deltap = normal2 = 1
     while j < it_pressao and normal2 > tol:
@@ -228,7 +193,14 @@ def evolucao(X, Y, V):
     plt.pause(0.0001)
     plt.clf()
     return
-def simulacao(u0, v0, p0):
+
+def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0):
+    #Constantes calculadas
+    dx = comprimento/(nx-1)
+    dy = altura/(ny-1)
+    dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/v_max)
+    passos_tempo = int(t_final/dt)
+
     #Conta tempo de simulação
     inicio = perf_counter()
 
@@ -251,7 +223,6 @@ def simulacao(u0, v0, p0):
     u, v = condicoes_contorno_velocidades_duto(u, v)
     p = condicoes_contorno_pressao_duto(p)
 
-    parametros()
     tempo_transcorrido = 0
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
     if plotar_evolucao:
@@ -285,7 +256,7 @@ def simulacao(u0, v0, p0):
         # Resolve a Pressão iterativamente
         p_novo = np.copy(p)
 
-        p, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy)
+        p, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
