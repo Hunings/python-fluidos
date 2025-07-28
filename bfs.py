@@ -12,14 +12,14 @@ s.dx = s.comprimento/(s.nx-1)
 s.dy = s.altura/(s.ny-1)
 s.u_max = 5
 s.v_max = 5
-tau = 0.1
+tau = 0.5
 s.dt = tau*min(s.Re/2*(1/s.dx**2 + 1/s.dy**2), s.dx/s.u_max, s.dy/s.u_max)
 
-t_final = 3
+t_final = 1
 s.passos_tempo = int(t_final/s.dt)
 
 s.it_pressao = 1000
-s.tol = 1e-5
+s.tol = 1e-4
 s.plotar_a_cada = 10
 s.sx = int((s.nx-1)/6)
 s.sy = int((s.ny-1)/2)  
@@ -36,13 +36,6 @@ dvdx[1:-1, 1:-1] = (v[2:, 1:-1] - v[:-2, 1:-1] ) / (2*s.dx)
 dvdx[1:-1, 1:-1] = (v[1:-1, 2:] - v[1:-1, :-2] ) / (2*s.dy)
 w = 1/2 * (dvdx - dudy)
 
-plt.figure(figsize=(50, 5))
-plt.quiver(X, Y, u, v, velocidade_modulo, scale=30)
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.title(f"Re = {s.Re} t = {t_final}")
-plt.colorbar()
-plt.show()
-
 s.plotar_contorno(X, Y, velocidade_modulo, s.Re, t_final, 'Módulo da Velocidade')
 s.plotar_streamlines(X, Y, u, v, velocidade_modulo, s.Re, t_final)
+s.plotar_vetores(X, Y, u, v, velocidade_modulo, s.Re, t_final)
