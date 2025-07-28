@@ -222,6 +222,12 @@ def plotar_vetores(X, Y, u, v, V, Re, t_final):
 def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2):
     print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
     return
+def evolucao(X, Y, V):
+    plt.contourf(X, Y, V, levels=10, cmap='jet')
+    plt.colorbar()
+    plt.pause(0.0001)
+    plt.clf()
+    return
 def simulacao(u0, v0, p0):
     #Conta tempo de simulação
     inicio = perf_counter()
@@ -246,8 +252,10 @@ def simulacao(u0, v0, p0):
     p = condicoes_contorno_pressao_duto(p)
 
     parametros()
-    plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
     tempo_transcorrido = 0
+    plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
+    if plotar_evolucao:
+        plt.figure(figsize=(15,2))        
     # Iteração 
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
@@ -300,12 +308,7 @@ def simulacao(u0, v0, p0):
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:
-            plt.contourf(X, Y, V, levels=10, cmap='jet')
-            plt.colorbar()
-            plt.draw()
-            plt.pause(0.005)
-            plt.clf()
+            evolucao(X, Y, V)
     fim = perf_counter()
     tempo = fim - inicio
-    plt.show()
     return X, Y, u, v, p, V, tempo
