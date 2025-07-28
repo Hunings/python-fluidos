@@ -26,7 +26,7 @@ def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Paredes Duto Neumann homogênea
-    p[:sx+1, :sy+1] = np.pi #Qualquer valor não deve interferir no resto da simulação
+    p[:sx+1, :sy+1] = p[sx+1, sy+1] #Qualquer valor não deve interferir no resto da simulação
     p[sx, :sy+1] = p[sx+1, :sy+1] #Parede leste do ressalto
     p[:sx+1, sy] = p[:sx+1, sy+1] #Parede norte do ressalto
     return p
@@ -157,8 +157,12 @@ def malha(comprimento, altura, nx, ny):
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
     return X, Y
-def plotar_contorno(X, Y, V, Re, t_final, titulo):
-    plt.figure(figsize=(15, 2))
+def plotar_contorno(X, Y, V, Re, t_final, titulo, quadrado):
+    if not quadrado:
+        c, a = 15, 2
+    else:
+        c, a = 8, 12
+    plt.figure(figsize=(c, a))
     plt.contourf(X, Y, V, levels=200, cmap='jet')
     plt.xlabel('X')
     plt.ylabel('Y')
@@ -166,8 +170,12 @@ def plotar_contorno(X, Y, V, Re, t_final, titulo):
     plt.colorbar(orientation='horizontal')
     plt.show()
     return
-def plotar_streamlines(X, Y, u, v, V, Re, t_final):
-    plt.figure(figsize=(15, 2))
+def plotar_streamlines(X, Y, u, v, V, Re, t_final, quadrado):
+    if not quadrado:
+        c, a = 15, 2
+    else:
+        c, a = 8, 12
+    plt.figure(figsize=(c, a))
     plt.streamplot(X.T, Y.T, u.T, v.T, color=V.T, cmap='jet')
     plt.xlabel('X')
     plt.ylabel('Y')
@@ -175,9 +183,13 @@ def plotar_streamlines(X, Y, u, v, V, Re, t_final):
     plt.colorbar(orientation='horizontal')
     plt.show()
     return
-def plotar_vetores(X, Y, u, v, V, Re, t_final):
-    plt.figure(figsize=(15, 2))
-    plt.quiver(X[::2, ::2], Y[::2, ::2], u[::2, ::2], v[::2, ::2], V[::2, ::2], scale=60, cmap='jet')
+def plotar_vetores(X, Y, u, v, V, Re, t_final, escala, step, quadrado):
+    if not quadrado:
+        c, a = 15, 2
+    else:
+        c, a = 8, 12
+    plt.figure(figsize=(c, a))
+    plt.quiver(X[::step, ::step], Y[::step, ::step], u[::step, ::step], v[::step, ::step], V[::step, ::step], scale=escala, cmap='jet')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.title(f"Re = {Re}, t = {t_final}")
@@ -194,7 +206,7 @@ def evolucao(X, Y, V):
     plt.clf()
     return
 
-def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0):
+def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, forma='duto'):
     #Constantes calculadas
     dx = comprimento/(nx-1)
     dy = altura/(ny-1)
@@ -226,7 +238,10 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     tempo_transcorrido = 0
     plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
     if plotar_evolucao:
-        plt.figure(figsize=(15,2))        
+        if forma == 'quadrado':
+            plt.figure(figsize=(10, 8))
+        else:
+            plt.figure(figsize=(15,2))
     # Iteração 
     for i in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +

@@ -1,50 +1,31 @@
-import simulacao as sim
+import simulacao as s
 import matplotlib.pyplot as plt
 
-sim.comprimento = 1
-sim.altura = 1
-sim.nx = 100
-sim.ny = 100
-sim.Re = 100
-sim.dx = sim.comprimento / (sim.nx - 1)
-sim.dy = sim.altura / (sim.ny - 1)
+comprimento = 1
+altura = 1
+nx = 30
+ny = 30
+Re = 100
+u_max = 1
+v_max = 1
+tau = 0.5
+t_final = 200
 
-u_max = 3
-v_max = 3
-tau = 0.1
-sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
-sim.t_final = 200
-sim.dt = 1e-3
+tol = 1e-2
+it_pressao = 100
+plotar_a_cada = 1
 
-sim.tol = 1e-2
-sim.passos_tempo = int(sim.t_final/sim.dt)
-sim.passos_tempo = 5000
-sim.it_pressao = 100
-sim.plotar_a_cada = 100
+u0 = 0
+v0 = p0 = 0
 
-sim.condicoes_contorno_velocidades_duto = sim.condicoes_contorno_velocidades_cav
+s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_cav
 
-X, Y, u, v, p, velocidade_modulo = sim.simulacao(0, 0, 0)
+X, Y, u, v, p, velocidade_modulo, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, 'quadrado')
+
+print(f"Tempo de execução: {(tempo):2f} segundos")
 
 #Visualização 
 
-plt.figure(figsize=(11, 10))
-plt.quiver(X, Y, u, v, velocidade_modulo, scale=20)
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.title(f"Re = {sim.Re} t = {sim.t_final}")
-plt.colorbar()
-plt.show()
-plt.figure(figsize=(11, 10))
-plt.streamplot(X.T, Y.T, u.T, v.T, color=velocidade_modulo.T, cmap='jet')
-plt.colorbar()
-plt.xlabel('X')
-plt.ylabel('Y')  
-plt.title(f"Re = {sim.Re} t = {sim.t_final}")
-plt.show()
-plt.figure(figsize=(11, 10))
-plt.contourf(X, Y, p)
-plt.colorbar()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.show()
+s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade', 1)
+s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, 1)
+s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 1, 1)

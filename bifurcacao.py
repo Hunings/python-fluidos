@@ -35,5 +35,5 @@ print(f"Tempo de execução: {(tempo):2f} segundos")
 
 #Visualização 
 
-sim.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade')
-sim.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final)
+sim.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade', False)
+sim.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
