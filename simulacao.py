@@ -186,14 +186,18 @@ def pressao(fonte, p, p_novo, dx, dy):
             p[:] = p_novo
             j+=1
     return p, deltap, normal2
-def simulacao(u0, v0, p0):
-    #Conta tempo de simulação
-    inicio = perf_counter()
-    # Malha
+def malha(comprimento, altura, nx, ny):
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
+    return X, Y
+def simulacao(u0, v0, p0):
+    #Conta tempo de simulação
+    inicio = perf_counter()
+
+    # Malha
+    X, Y = malha(comprimento, altura, nx, ny)
 
     # Condições Iniciais
     u = u0*np.ones((nx, ny))

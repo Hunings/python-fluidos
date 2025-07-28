@@ -19,7 +19,7 @@ t_final = 10
 sim.passos_tempo = int(t_final/sim.dt)
 
 sim.it_pressao = 1000
-sim.tol = 1e-8
+sim.tol = 1e-5
 sim.plotar_a_cada = 10
 sim.sx = int((sim.nx-1)/6)
 sim.sy = int((sim.ny-1)/2)  
