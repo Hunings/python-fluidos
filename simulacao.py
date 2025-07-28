@@ -164,24 +164,28 @@ def condicoes_contorno_velocidades_cav(u, v):
     u[1:-1, -1] = 1. #Norte
     v[:, -1] = 0.
     return u, v
-def pressao(fonte, p, p_novo):
-    #p = np.copy(p_ant)
-    p_novo = np.copy(p)
+def pressao(fonte, p, p_novo, dx, dy):
     j = 0
-    deltap = 1
-    while j < it_pressao and deltap > tol:
+    deltap = normal2 = 1
+    while j < it_pressao and normal2 > tol:
+            #Atualiza pressão iterativamente
             p_novo[1:-1, 1:-1] = (
               (dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1]))
               +
               (dx**2 * (p[1:-1, 2:] + p[1:-1, :-2]))
               -
               (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/(2 * (dx**2 + dy**2))
-            # Condições de Contorno Pressão
+            #Condições de Contorno Pressão
             p_novo = condicoes_contorno_pressao_duto(p_novo)
-            deltap = np.max(np.abs(p-p_novo))
+
+            #Calcula medidas do erro
+            deltap = np.max(abs(p-p_novo))
+            normal2 = np.linalg.norm(p-p_novo, ord=np.inf)/np.linalg.norm(p_novo)
+
+            #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
-    return p
+    return p, deltap, normal2
 def simulacao(u0, v0, p0):
     #Conta tempo de simulação
     inicio = perf_counter()
@@ -198,7 +202,7 @@ def simulacao(u0, v0, p0):
 
     # Arrays 
     u_, v_ = np.zeros((nx, ny)), np.zeros((nx, ny))
-    u_novo, v_novo, p_novo = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
+    u_novo, v_novo = np.zeros((nx, ny)), np.zeros((nx, ny))
     difusao_x, difusao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
     conveccao_x, conveccao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
     dpdx, dpdy = np.zeros((nx, ny)), np.zeros((nx, ny))
@@ -238,20 +242,8 @@ def simulacao(u0, v0, p0):
 
         # Resolve a Pressão iterativamente
         p_novo = np.copy(p)
-        j = 0
-        deltap = 1
-        while j < it_pressao and deltap > tol:
-            p_novo[1:-1, 1:-1] = (
-              (dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1]))
-              +
-              (dx**2 * (p[1:-1, 2:] + p[1:-1, :-2]))
-              -
-              (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/(2 * (dx**2 + dy**2))
-            # Condições de Contorno Pressão
-            p_novo = condicoes_contorno_pressao_duto(p_novo)
-            deltap = np.max(np.abs(p-p_novo))
-            p[:] = p_novo
-            j+=1
+
+        p, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
@@ -267,7 +259,7 @@ def simulacao(u0, v0, p0):
         V = (u**2 + v**2)**(0.5)
         tt += dt
         V_max = np.max(V)
-        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||u|| =', V_max, '|∆p| =', deltap)
+        print('It:', i, '/', passos_tempo, f"t = {tt:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
         if V_max > 50 or np.isnan(V_max):
             break
         if plotar_evolucao and i % plotar_a_cada == 0:

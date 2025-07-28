@@ -5,7 +5,7 @@ comprimento = 1
 altura = 1
 nx = 50
 ny = 50
-Re = 1000
+Re = 100
 dx = comprimento / (nx-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 dy = altura / (ny-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 
