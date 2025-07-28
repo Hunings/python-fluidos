@@ -2,14 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import perf_counter
 '''
-Este código realiza uma simulação 2D de um fluido em um duto utilizando diferenças finitas centradas,
-e um solver para a pressão utilizando o método iterativo de Jacobi.
+Este código realiza uma simulação 2D de um fluido utilizando diferenças finitas centradas,
+e um solver para a equação de Poisson para a pressão que aplica o método iterativo de Jacobi.
 
-Abaixo são definidas os parâmetros constantes do problema padrão, mas um código auxiliar deve ser utilizado para
-rodar uma simulação específica (um exemplo de código está junto a esse no repositório do GitHub duto_ressalto.py).
+Abaixo estão as funções que aplicam as condições de contorno, criam a malha, resolvem as equações e rodam o loop principal.
+Para rodar o código é necessário um código auxiliar que inicializa as variáveis e executa algumas das funções. Exemplos destes
+códigos auxiliares estão junto com este no GitHub.
 
-A simulação principal consiste basicamente na função simulacao(), que inicia os arrays e o loop para a evolução temporal, além do cálculo da pressão,
-junto com condições de contorno para velocidade e pressão, definidas como as funções condicoes_contorno_pressao(p) e condicoes_contorno_velocidades(u, v).
+A simulação principal consiste basicamente na função simulacao(), que inicia os arrays e o loop para a evolução temporal, e executa as funções para
+aplicar as condições de contorno para velocidade e pressão.
 '''
 
 abertura = 0
