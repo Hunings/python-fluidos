@@ -14,10 +14,11 @@ aplicar as condições de contorno para velocidade e pressão.
 '''
 
 abertura = 0
-pos_x = 0
-pos_y = 0
-sx = 0
-sy = 0
+pos_obs_x = 0
+pos_obs_y = 0
+bfs_x = 0
+bfs_y = 0
+tam_obs = 10
 
 def condicoes_contorno_pressao_bfs(p):
     #Paredes Neumann homogênea
@@ -59,8 +60,8 @@ def condicoes_contorno_velocidades_obs(u, v):
     u[-1, 1:-1] = u[-2, 1:-1] #Leste
     v[-1, 1:-1] = v[-2, 1:-1]
     #Obstáculo No-Slip
-    u[pos_x:pos_x+8, pos_y:pos_y+8] = 0
-    v[pos_x:pos_x+8, pos_y:pos_y+8] = 0
+    u[pos_obs_x:pos_obs_x+8, pos_obs_y:pos_obs_y+8] = 0
+    v[pos_obs_x:pos_obs_x+8, pos_obs_y:pos_obs_y+8] = 0
     return u, v
 def condicoes_contorno_pressao_obs(p):
     #Paredes Neumann homogênea
@@ -69,12 +70,12 @@ def condicoes_contorno_pressao_obs(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Obstáculo Neumann
-    p[pos_x:pos_x+8, pos_y+8] = p[pos_x:pos_x+8, pos_y+9] #Norte
-    p[pos_x:pos_x+8, pos_y] = p[pos_x:pos_x+8, pos_y-1] #Sul
-    p[pos_x, pos_y:pos_y+8] = p[pos_x-1, pos_y:pos_y+8] #Oeste
-    p[pos_x+8, pos_y:pos_y+8] = p[pos_x+9, pos_y:pos_y+8] #Leste
+    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y+tam_obs] = p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y+tam_obs+1] #Norte
+    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y] = p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y-1] #Sul
+    p[pos_obs_x, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x-1, pos_obs_y:pos_obs_y+tam_obs+1] #Oeste
+    p[pos_obs_x+tam_obs, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] #Leste
     #Interior do obstáculo
-    p[pos_x:pos_x+8, pos_y:pos_y+8] = np.pi
+    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x:pos_obs_x+tam_obs+2, pos_obs_y:pos_obs_y+tam_obs+2]
     return p
 def condicoes_contorno_velocidades_bif(u, v):
     #Paredes No-Slip
@@ -212,6 +213,8 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     dy = altura/(ny-1)
     dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/v_max)
     passos_tempo = int(t_final/dt)
+
+    print(f"dx = {dx:.3f}, dy = {dy:.3f}, dt = {dt:.3f}")
 
     #Conta tempo de simulação
     inicio = perf_counter()

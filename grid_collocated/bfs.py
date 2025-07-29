@@ -14,8 +14,8 @@ t_final = 100
 it_pressao = 1000
 tol = 1e-4
 plotar_a_cada = 10
-s.sx = int((nx-1)/6)
-s.sy = int((ny-1)/2)  
+s.bfs_x = int((nx-1)/6)
+s.bfs_y = int((ny-1)/2)  
 u0 = 1
 v0 = p0 = 0
 
