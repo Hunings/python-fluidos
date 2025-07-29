@@ -21,10 +21,14 @@ bfs_y = 0
 tam_obs = 10
 
 def salvar(u, v, p, it):
-    np.savez(r"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\dados.npz", u=u, v=v, p=p, iteracao=it)
+    query = input('Quer salvar? [Digite 1 para sim]')
+    if query:
+        nome = input('Nome do arquivo: ')
+        np.savez(rf"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\{nome}", u=u, v=v, p=p, iteracao=it)
     return
 def carregar(u, v, p):
-    dados = np.load(r"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\dados.npz")
+    nome = input('Nome: ')
+    dados = np.load(rf"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\{nome}.npz")
     u[:] = dados["u"]
     v[:] = dados["v"]
     p[:] = dados["p"]
@@ -233,7 +237,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     X, Y = malha(comprimento, altura, nx, ny)
 
     # Condições Iniciais
-    continuar = input("Quer carregar dados? [0/1]")
+    continuar = input("Quer carregar dados? [Digite 1 para sim]")
     if continuar:
         u, v, p = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
         u, v, p, iteracao_anterior = carregar(u, v, p)
@@ -254,7 +258,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     p = condicoes_contorno_pressao_duto(p)
 
     tempo_transcorrido = 0
-    plotar_evolucao = bool(input('Plotar evolução temporal? [0/1]'))
+    plotar_evolucao = bool(input('Plotar evolução temporal? [Digite 1 para sim]'))
     if plotar_evolucao:
         if forma == 'quadrado':
             plt.figure(figsize=(10, 8))
@@ -315,4 +319,5 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
             evolucao(X, Y, V)
     fim = perf_counter()
     tempo = fim - inicio
+    salvar(u, v, p, it)
     return X, Y, u, v, p, V, tempo, it

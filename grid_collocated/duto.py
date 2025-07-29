@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 comprimento = 20
 altura = 1
 nx = 200
-ny = 20
-Re = 300
+ny = 40
+Re = 500
 u_max = 2
 v_max = 2
-tau = 0.9
-t_final = 100
-tol = 1e-4
+tau = 0.5
+t_final = 200
+tol = 1e-6
 it_pressao = 1000
-plotar_a_cada = 10
+plotar_a_cada = 100
 u0, v0, p0 = 1, 0, 0
 
 #Condições de contorno internas padrão

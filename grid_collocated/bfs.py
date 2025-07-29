@@ -5,15 +5,15 @@ import numpy as np
 comprimento = 35
 altura = 2
 nx = 200
-ny = 20
-Re = 100
-u_max = 5
-v_max = 5
+ny = 40
+Re = 300
+u_max = 6
+v_max = 6
 tau = 0.5
-t_final = 1000
+t_final = 10
 it_pressao = 1000
-tol = 1e-7
-plotar_a_cada = 10
+tol = 1e-5
+plotar_a_cada = 100
 s.bfs_x = int((nx-1)/6)
 s.bfs_y = int((ny-1)/2)  
 u0 = 1
@@ -35,8 +35,7 @@ dvdx[1:-1, 1:-1] = (v[1:-1, 2:] - v[1:-1, :-2] ) / (2*dy)
 w = 1/2 * (dvdx - dudy)
 
 s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade', False)
-s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
-s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
-s.plotar_contorno(X, Y, w, Re, t_final, 'Vorticidade', False)
+#s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
+#s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
+#s.plotar_contorno(X, Y, w, Re, t_final, 'Vorticidade', False)
 s.plotar_contorno(X, Y, p, Re, t_final, 'Pressão', 0)
-s.salvar(u, v, p, it)
