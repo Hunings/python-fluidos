@@ -20,6 +20,16 @@ bfs_x = 0
 bfs_y = 0
 tam_obs = 10
 
+def salvar(u, v, p, it):
+    np.savez(r"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\dados.npz", u=u, v=v, p=p, iteracao=it)
+    return
+def carregar(u, v, p):
+    dados = np.load(r"E:\Documentos\IC\Códigos\python-fluidos\grid_collocated\dados\dados.npz")
+    u[:] = dados["u"]
+    v[:] = dados["v"]
+    p[:] = dados["p"]
+    iteracao = int(dados["iteracao"])
+    return u, v, p, iteracao
 def condicoes_contorno_pressao_bfs(p):
     #Paredes Neumann homogênea
     p[-1, :] = p[-2, :] #Leste
@@ -27,9 +37,9 @@ def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Paredes Duto Neumann homogênea
-    p[:sx+1, :sy+1] = p[sx+1, sy+1] #Qualquer valor não deve interferir no resto da simulação
-    p[sx, :sy+1] = p[sx+1, :sy+1] #Parede leste do ressalto
-    p[:sx+1, sy] = p[:sx+1, sy+1] #Parede norte do ressalto
+    p[:bfs_x+1, :bfs_y+1] = p[bfs_x+1, bfs_y+1] #Qualquer valor não deve interferir no resto da simulação
+    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
+    p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
     return p
 def condicoes_contorno_velocidades_bfs(u, v):
     #Paredes No-Slip
@@ -38,14 +48,14 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[:, -1] = 0 # Norte
     v[:, -1] = 0
     #Entrada Dirichlet
-    u[0, sy+1:-1] = 1. # Oeste
-    v[0, sy+1:-1] = 0.
+    u[0, bfs_y+1:-1] = 1. # Oeste
+    v[0, bfs_y+1:-1] = 0.
     #Saída Neumann homogênea
     u[-1, :] = u[-2, :] # Leste
     v[-1, :] = v[-2, :]
     #Velocidade no interior da borda
-    u[:sx+1, :sy+1] = 0
-    v[:sx+1, :sy+1] = 0
+    u[:bfs_x+1, :bfs_y+1] = 0
+    v[:bfs_x+1, :bfs_y+1] = 0
     return u, v
 def condicoes_contorno_velocidades_obs(u, v):
     #Paredes No-Slip
@@ -223,10 +233,15 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     X, Y = malha(comprimento, altura, nx, ny)
 
     # Condições Iniciais
-    u = u0*np.ones((nx, ny))
-    v = v0*np.ones((nx, ny))
-    p = p0*np.ones((nx, ny))
-
+    continuar = input("Quer carregar dados? [0/1]")
+    if continuar:
+        u, v, p = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
+        u, v, p, iteracao_anterior = carregar(u, v, p)
+    else:
+        u = u0*np.ones((nx, ny))
+        v = v0*np.ones((nx, ny))
+        p = p0*np.ones((nx, ny))
+        iteracao_anterior = 0
     # Arrays 
     u_, v_ = np.zeros((nx, ny)), np.zeros((nx, ny))
     u_novo, v_novo = np.zeros((nx, ny)), np.zeros((nx, ny))
@@ -246,7 +261,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         else:
             plt.figure(figsize=(15,2))
     # Iteração 
-    for i in range(passos_tempo):
+    for it in range(passos_tempo):
         difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
                                         (u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]) / dy**2)
     
@@ -292,12 +307,12 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         V = (u**2 + v**2)**(0.5)
         V_max = np.max(V)
 
-        informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2)
+        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2)
 
         if V_max > 50 or np.isnan(V_max):
             break
-        if plotar_evolucao and i % plotar_a_cada == 0:
+        if plotar_evolucao and it % plotar_a_cada == 0:
             evolucao(X, Y, V)
     fim = perf_counter()
     tempo = fim - inicio
-    return X, Y, u, v, p, V, tempo
+    return X, Y, u, v, p, V, tempo, it

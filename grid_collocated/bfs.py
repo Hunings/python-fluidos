@@ -4,15 +4,15 @@ import numpy as np
 
 comprimento = 35
 altura = 2
-nx = 201
-ny = 21
+nx = 200
+ny = 20
 Re = 100
 u_max = 5
 v_max = 5
 tau = 0.5
-t_final = 100
+t_final = 1000
 it_pressao = 1000
-tol = 1e-4
+tol = 1e-7
 plotar_a_cada = 10
 s.bfs_x = int((nx-1)/6)
 s.bfs_y = int((ny-1)/2)  
@@ -22,7 +22,7 @@ v0 = p0 = 0
 s.condicoes_contorno_pressao_duto = s.condicoes_contorno_pressao_bfs
 s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_bfs
 
-X, Y, u, v, p, velocidade_modulo, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
+X, Y, u, v, p, velocidade_modulo, tempo, it = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 
@@ -39,3 +39,4 @@ s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
 s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
 s.plotar_contorno(X, Y, w, Re, t_final, 'Vorticidade', False)
 s.plotar_contorno(X, Y, p, Re, t_final, 'Pressão', 0)
+s.salvar(u, v, p, it)
