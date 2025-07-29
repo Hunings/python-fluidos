@@ -75,7 +75,7 @@ def condicoes_contorno_pressao_obs(p):
     p[pos_obs_x, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x-1, pos_obs_y:pos_obs_y+tam_obs+1] #Oeste
     p[pos_obs_x+tam_obs, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] #Leste
     #Interior do obstáculo
-    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x:pos_obs_x+tam_obs+2, pos_obs_y:pos_obs_y+tam_obs+2]
+    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x+3, pos_obs_y+3]
     return p
 def condicoes_contorno_velocidades_bif(u, v):
     #Paredes No-Slip
