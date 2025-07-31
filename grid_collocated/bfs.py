@@ -4,15 +4,15 @@ import numpy as np
 
 comprimento = 35
 altura = 2
-nx = 200
-ny = 40
-Re = 300
-u_max = 6
-v_max = 6
-tau = 0.5
+nx = 350
+ny = 20
+Re = 800
+u_max = 3
+v_max = 3
+tau = 0.2
 t_final = 10
-it_pressao = 1000
-tol = 1e-5
+it_pressao = 1500
+tol = 1e-4
 plotar_a_cada = 100
 s.bfs_x = int((nx-1)/6)
 s.bfs_y = int((ny-1)/2)  
@@ -38,4 +38,3 @@ s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final, 'Módulo da Velocidade',
 #s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
 #s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
 #s.plotar_contorno(X, Y, w, Re, t_final, 'Vorticidade', False)
-s.plotar_contorno(X, Y, p, Re, t_final, 'Pressão', 0)

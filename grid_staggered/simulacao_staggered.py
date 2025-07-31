@@ -6,7 +6,7 @@ comprimento = 1
 altura = 1
 nx = 7
 ny = 5
-Re = 100
+Re = 1
 dx = comprimento / (nx-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 dy = altura / (ny-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
 
@@ -18,12 +18,12 @@ t_final = 1
 passos_tempo = 2000
 
 it_pressao = 100
-plotar_a_cada = 1   
+plotar_a_cada = 1000   
 
 sy = int(nx/5)
 sx = int(nx/5)
 
-def condicoes_contorno_V(u, v):
+def condicoes_contorno_velocidades(u, v):
     #Sul
     u[:, 0] = -u[:, 1] # No-Slip
     v[:, 0] = 0 # No-Slip
@@ -33,12 +33,12 @@ def condicoes_contorno_V(u, v):
     v[:, -1] = 0 # No-slip
 
     #Leste
-    v[-1, :-1] = v[-2, :-1] # Neumann
-    u[-1, :-1] = u[-2, :-1] # Neumann
+    v[-1, :] = v[-2, :] # Neumann
+    u[-1, :] = u[-2, :] # Neumann
 
     #Oeste
-    v[0, :-1] = -v[1, :-1] # Dirichlet = 0
-    u[0, :-1] = 1.0 # Dirichlet
+    v[0, :] = -v[1, :] # Dirichlet = 0
+    u[0, :] = 1.0 # Dirichlet
 
     return u, v
 def condicoes_contorno_V_cavidade(u, v):
@@ -103,7 +103,7 @@ def simulacao(u0, v0, p0):
     v = v0*np.ones((nx+1, ny)) #8x5
     p = p0*np.ones((nx+1, ny+1)) #8x6
 
-    u, v = condicoes_contorno_V(u, v)
+    u, v = condicoes_contorno_velocidades(u, v)
     p = condicoes_contorno_pressao(p)
 
     u_, v_ = np.zeros_like(u), np.zeros_like(v)
@@ -114,6 +114,8 @@ def simulacao(u0, v0, p0):
     t=0
     plotar_evolucao = bool(input('Digite algo, infeliz!'))
     for it in range(passos_tempo):
+        gamma = 0
+        print(gamma)
         difusao_x = 1/Re * ( # 5x4 nesse caso
             (u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1])/dx**2
             +
@@ -124,17 +126,37 @@ def simulacao(u0, v0, p0):
             +
             (v[1:-1, 2:] - 2*v[1:-1, 1:-1] + v[1:-1, :-2])/dy**2
         )
-        du2dx = ((u[1:-1, 1:-1] + u[2:, 1:-1])**2 - (u[1:-1, 1:-1] + u[:-2, 1:-1])**2)/(4*dx) # 5x4
-        duvdy = ((v[1:-2, 1:] + v[2:-1, 1:])*(u[1:-1, 1:-1] + u[1:-1, 2:]) - (v[1:-2, :-1] + v[2:-1, :-1])*(u[1:-1, :-2] + u[1:-1, 1:-1]))/(4*dy)
+        du2dx = (((u[1:-1, 1:-1] + u[2:, 1:-1])**2 - (u[1:-1, 1:-1] + u[:-2, 1:-1])**2)/(4*dx) # 5x4
+        + gamma*(abs(u[1:-1, 1:-1] + u[2:, 1:-1])*(u[1:-1, 1:-1] - u[2:, 1:-1]) 
+            - 
+            abs(u[:-2, 1:-1] + u[1:-1, 1:-1])*(u[:-2, 1:-1] - u[1:-1, 1:-1])
+            )/(4*dx)
+        )
+        duvdy = (((v[1:-2, 1:] + v[2:-1, 1:])*(u[1:-1, 1:-1] + u[1:-1, 2:]) - (v[1:-2, :-1] + v[2:-1, :-1])*(u[1:-1, :-2] + u[1:-1, 1:-1]))/(4*dy)
+        + gamma*(abs(v[1:-2, 1:] + v[2:-1, 1:])*(u[1:-1, 1:-1] - u[1:-1, 2:]) 
+            - 
+            abs(v[1:-2, :-1] + v[2:-1, :-1])*(u[1:-1, :-2] - u[1:-1, 1:-1])
+            )/(4*dy)
+        )
         conveccao_x = du2dx + duvdy
-        dv2dy2 = ((v[1:-1, 1:-1] + v[1:-1, 2:])**2 - (v[1:-1, 1:-1] + v[1:-1, :-2])**2)/(4*dy) #6x3
-        duvdx = ((u[1:, 1:-2] + u[:-1, 2:-1])*(v[1:-1, 1:-1] + v[2:, 1:-1]) - (u[:-1, 1:-2] + u[:-1, 2:-1])*(v[:-2, 1:-1] + v[1:-1, 1:-1]))/(4*dx)
+        dv2dy2 = (((v[1:-1, 1:-1] + v[1:-1, 2:])**2 - (v[1:-1, 1:-1] + v[1:-1, :-2])**2)/(4*dy) #6x3
+        + gamma*(abs(v[1:-1, 1:-1] + v[1:-1, 2:]*(v[1:-1, 1:-1] - v[1:-1, 2:])) 
+            - 
+            abs(v[1:-1, :-2] + v[1:-1, 1:-1])*(v[1:-1, :-2] - v[1:-1, 1:-1])
+            )/(4*dy)
+        )
+        duvdx = (((u[1:, 1:-2] + u[:-1, 2:-1])*(v[1:-1, 1:-1] + v[2:, 1:-1]) - (u[:-1, 1:-2] + u[:-1, 2:-1])*(v[:-2, 1:-1] + v[1:-1, 1:-1]))/(4*dx) 
+        + gamma*(abs(u[1:, 1:-2] + u[:-1, 2:-1])*(v[1:-1, 1:-1] - v[2:, 1:-1]) 
+            -
+            abs(u[:-1, 1:-2] + u[:-1, 2:-1])*(v[:-2, 1:-1] - v[1:-1, 1:-1])
+            )/(4*dx)
+        )
         conveccao_y = dv2dy2 + duvdx
 
         u_[1:-1, 1:-1] = u[1:-1, 1:-1] + dt*(difusao_x - conveccao_x) #5x4 considerando os [1:-1, 1:-1]
         v_[1:-1, 1:-1] = v[1:-1, 1:-1] + dt*(difusao_y - conveccao_y) #6x3 considerando os [1:-1, 1:-1]
 
-        u_, v_ = condicoes_contorno_V(u_, v_)
+        u_, v_ = condicoes_contorno_velocidades(u_, v_)
 
         fonte[1:-1, 1:-1] = ((u_[1:, 1:-1] - u_[:-1, 1:-1])/dx + (v_[1:-1, 1:] - v_[1:-1, :-1])/dy)/dt #6x4
         
@@ -165,7 +187,7 @@ def simulacao(u0, v0, p0):
         u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt # 7x6
         v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt # 8x5
         
-        u_novo, v_novo = condicoes_contorno_V(u_novo, v_novo)
+        u_novo, v_novo = condicoes_contorno_velocidades(u_novo, v_novo)
 
         u[:], v[:], p[:] = u_novo, v_novo, p_novo
         
@@ -177,7 +199,7 @@ def simulacao(u0, v0, p0):
         um, vm = (u[:, :-1] + u[:, 1:])/2, (v[1:, :] + v[:-1, :])/2
         V = (um**2+vm**2)**(1/2)
         p_med = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
-        if plotar_evolucao:
+        if plotar_evolucao and it % plotar_a_cada == 0:
             plt.contourf(X, Y, V, levels=100, cmap='jet')
             plt.colorbar()
             plt.draw()

@@ -215,9 +215,9 @@ def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, nor
     print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
     return
 def evolucao(X, Y, V):
-    plt.contourf(X, Y, V, levels=10, cmap='jet')
+    plt.contourf(X, Y, V, levels=100, cmap='jet')
     plt.colorbar()
-    plt.pause(0.0001)
+    plt.pause(1e-10)
     plt.clf()
     return
 

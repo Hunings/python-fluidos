@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 comprimento = 20
 altura = 1
 nx = 200
-ny = 40
-Re = 500
+ny = 100
+Re = 10
 u_max = 2
 v_max = 2
-tau = 0.5
-t_final = 200
-tol = 1e-6
-it_pressao = 1000
+tau = 0.1
+t_final = 6
+tol = 1e-5
+it_pressao = 1500
 plotar_a_cada = 100
 u0, v0, p0 = 1, 0, 0
 
@@ -30,5 +30,4 @@ s.plotar_streamlines(X, Y, u, v, V, Re, t_final, 0)
 s.plotar_vetores(X, Y, u, v, V, Re, t_final, 60, 2, 0)
 s.plotar_contorno(X, Y, v, Re, t_final, 'v', 0)
 s.plotar_contorno(X, Y, p, Re, t_final, 'Pressão', 0)
-s.salvar(u, v, p, it)
 
