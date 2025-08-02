@@ -52,8 +52,8 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[:, -1] = 0 # Norte
     v[:, -1] = 0
     #Entrada Dirichlet
-    u[0, bfs_y+1:-1] = 1. # Oeste
-    v[0, bfs_y+1:-1] = 0.
+    u[0, bfs_y:-1] = 1. # Oeste
+    v[0, bfs_y:-1] = 0.
     #Saída Neumann homogênea
     u[-1, :] = u[-2, :] # Leste
     v[-1, :] = v[-2, :]
@@ -225,7 +225,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     #Constantes calculadas
     dx = comprimento/(nx-1)
     dy = altura/(ny-1)
-    dt = tau*min(Re/2*(1/dx**2 + 1/dy**2), dx/u_max, dy/v_max)
+    dt = tau*min(Re/2/(1/dx**2 + 1/dy**2), dx/u_max, dy/v_max)
     passos_tempo = int(t_final/dt)
 
     print(f"dx = {dx:.3f}, dy = {dy:.3f}, dt = {dt:.3f}")
@@ -293,7 +293,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         # Resolve a Pressão iterativamente
         p_novo = np.copy(p)
 
-        p, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
+        p_novo, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
