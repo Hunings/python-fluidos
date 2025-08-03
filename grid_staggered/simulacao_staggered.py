@@ -4,25 +4,32 @@ from time import perf_counter
 
 comprimento = 1
 altura = 1
-nx = 7
-ny = 5
+nx = 201
+ny = 21
 Re = 1
-dx = comprimento / (nx-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
-dy = altura / (ny-1) # tamanho dividido pelo NÚMERO DE CÉLULAS
-
+tau = 0.1
 u_max = 5
 v_max = 5
 tol = 1e-4
-dt = 1e-2
 t_final = 1
-passos_tempo = 2000
-
+bfs_x = int((nx-1)/6)
+bfs_y = int((ny-1)/2)  
 it_pressao = 100
 plotar_a_cada = 1000   
 
-sy = int(nx/5)
-sx = int(nx/5)
-
+def salvar(u, v, p):
+    query = input('Quer salvar? [Digite 1 para sim]')
+    if query:
+        nome = input('Nome do arquivo: ')
+        np.savez(rf"E:\Documentos\IC\Códigos\python-fluidos\grid_staggered\dados\{nome}", u=u, v=v, p=p)
+    return
+def carregar(u, v, p):
+    nome = input('Nome: ')
+    dados = np.load(rf"E:\Documentos\IC\Códigos\python-fluidos\grid_staggered\dados\{nome}.npz")
+    u[:] = dados["u"]
+    v[:] = dados["v"]
+    p[:] = dados["p"]
+    return u, v, p
 def condicoes_contorno_velocidades(u, v):
     #Sul
     u[:, 0] = -u[:, 1] # No-Slip
@@ -45,30 +52,57 @@ def condicoes_contorno_V_cavidade(u, v):
     #Sul
     u[:, 0] = -u[:, 1] # No-Slip
     v[:, 0] = 0 # No-Slip
-
     #Norte
     u[:, -1] = 2 - u[:, -2] # Dirichlet = 1
     v[:, -1] = 0 # Dirichlet = 0
-
     #Leste
     v[-1, :-1] = -v[-2, :-1] # No-slip
     u[-1, :-1] = 0 # No-slip
-
     #Oeste
     v[0, :-1] = -v[1, :-1] # No-slip
     u[0, :-1] = 0 # No-slip
-
     return u, v
+def condicoes_contorno_velocidades_bfs(u, v):
+    #Condições de entrada
+    u[0, bfs_y+1:-1] = 1.0 #Oeste
+    v[0, bfs_y+1:-1] = -v[1, bfs_y+1]
+    #Condições na parede
+    u[:, -1] = -u[:, -2] #Norte
+    v[:, -1] = 0
+    u[:, 0] = -u[:, 1] #Sul
+    v[:, 0] = 0
+    #Saída
+    u[-1, 1:-1] = u[-2, 1:-1]
+    v[-1, 1:-1] = v[-2, 1:-1]
+    #Ressalto
+    u[:bfs_x+1, bfs_y] = -u[:bfs_x+1, bfs_y+1] #Parte de cima do ressalto
+    v[:bfs_x+1, bfs_y] = 0
+    u[bfs_x, :bfs_y+1] = -u[bfs_x+1, :bfs_y+1]
+    v[bfs_x, :bfs_y+1] = 0
+    #Interior do ressalto
+    u[:bfs_x, :bfs_y] = 0
+    v[:bfs_x, :bfs_y] = 0
+    return u, v
+def condicoes_contorno_pressao_bfs(p):
+    p[:, 0] = p[:, 1] #Sul
+    p[:, -1] = p[:, -2] #Norte
+    p[-1, :] = p[-2, :] #Leste
+    p[0, :] = p[1, :] #Oeste
+    #Ressalto
+    p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1]
+    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1]
+    return p
 def condicoes_contorno_pressao(p):
-    #Sul
-    p[:, 0] = p[:, 1]
-    #Norte
-    p[:, -1] = p[:, -2]
-    #Leste
-    p[-1, :] = p[-2, :]
-    #Oeste
-    p[0, :] = p[1, :]
-
+    p[:, 0] = p[:, 1] #Sul
+    p[:, -1] = p[:, -2] #Norte
+    p[-1, :] = p[-2, :] #Leste
+    p[0, :] = p[1, :] #Oeste
+    return p
+def condicoes_contorno_pressao_bfs(p):
+    p[:, 0] = p[:, 1] #Sul
+    p[:, -1] = p[:, -2] #Norte
+    p[-1, :] = p[-2, :] #Leste
+    p[0, :] = p[1, :] #Oeste
     return p
 def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
     j = 0
@@ -92,13 +126,28 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
             p[:] = p_novo
             j+=1
     return p, deltap, normal2
-def simulacao(u0, v0, p0):
-    inicio = perf_counter()
+def malha(comprimento, altura, nx, ny):
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
+    return X, Y
+def simulacao(u0, v0, p0, tau):
+    dx = comprimento/(nx-1)
+    dy = altura/(ny-1)
+    dt = tau*min(Re/2/(1/dx**2 + 1/dy**2), dx/u_max, dy/v_max)
+    passos_tempo = int(t_final/dt)
 
+    inicio = perf_counter()
+    X, Y = malha(comprimento, altura, nx, ny)
+    continuar = input("Quer carregar dados? [Digite 1 para sim]")
+    if continuar:
+        u, v, p = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
+        u, v, p = carregar(u, v, p)
+    else:
+        u = u0*np.ones((nx, ny+1))
+        v = v0*np.ones((nx+1, ny))
+        p = p0*np.ones((nx+1, ny+1))
     u = u0*np.ones((nx, ny+1)) # 7x6
     v = v0*np.ones((nx+1, ny)) #8x5
     p = p0*np.ones((nx+1, ny+1)) #8x6
@@ -114,7 +163,7 @@ def simulacao(u0, v0, p0):
     t=0
     plotar_evolucao = bool(input('Digite algo, infeliz!'))
     for it in range(passos_tempo):
-        gamma = 0
+        gamma = 0.1
         print(gamma)
         difusao_x = 1/Re * ( # 5x4 nesse caso
             (u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1])/dx**2
@@ -164,23 +213,6 @@ def simulacao(u0, v0, p0):
 
         p_novo, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
 
-        #j = 0
-        #normal2=1
-        #while j < it_pressao and normal2 > tol:
-        #    p_novo[1:-1, 1:-1] = (
-        #        (dy**2 * (p[2:, 1:-1] + p[:-2, 1:-1]))
-        #        +
-        #        (dx**2 * (p[1:-1, 2:] + p[1:-1, :-2]))
-        #        -
-        #        (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/(2 * (dx**2 + dy**2))
-        #    # Condições de Contorno Pressão
-         #   normal2 = np.linalg.norm(p-p_novo, ord=np.inf)/np.linalg.norm(p_novo)
-        #    p_novo = condicoes_contorno_p(p_novo)
-        #    p[:] = p_novo
-        #    j+=1
-
-
-
         dpdx[1:-1, 1:-1] = (p_novo[2:-1, 1:-1] - p_novo[1:-2, 1:-1])/(dx) #7x6
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:-1] - p_novo[1:-1, 1:-2])/(dy) #8x5
 
@@ -198,7 +230,7 @@ def simulacao(u0, v0, p0):
         print('It:', it, '/', passos_tempo, f"t = {t:.3} / {t_final}", '||u|| =', u_maximo, '||v|| =', v_maximo, 'Norma-L2 =', normal2)
         um, vm = (u[:, :-1] + u[:, 1:])/2, (v[1:, :] + v[:-1, :])/2
         V = (um**2+vm**2)**(1/2)
-        p_med = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
+        pm = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
         if plotar_evolucao and it % plotar_a_cada == 0:
             plt.contourf(X, Y, V, levels=100, cmap='jet')
             plt.colorbar()
@@ -207,5 +239,6 @@ def simulacao(u0, v0, p0):
             plt.clf()
     fim = perf_counter()
     tempo = fim - inicio
+    salvar(um, vm, pm)
     plt.show()
-    return X, Y, um, vm, V, p_med, tempo
+    return X, Y, um, vm, V, pm, tempo

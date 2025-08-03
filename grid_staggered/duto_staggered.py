@@ -7,20 +7,17 @@ sim.altura = 1
 sim.nx = 50
 sim.ny = 50
 sim.Re = 1
-sim.dx = sim.comprimento / (sim.nx -1)
-sim.dy = sim.altura / (sim.ny -1)
+
 
 u_max = 2
 v_max = 2
-tau = 0.01
-sim.dt = tau*min(sim.Re/2*(1/sim.dx**2 + 1/sim.dy**2), sim.dx/u_max, sim.dy/u_max)
+tau = 0.1
 t_final = 1
-sim.passos_tempo = int(t_final / sim.dt)
 sim.it_pressao = 1000
 sim.plotar_a_cada = 1
 
 #Executa a simulação
-X, Y, u, v, velocidade_modulo, p, tempo = sim.simulacao(1, 0, 10)
+X, Y, u, v, velocidade_modulo, p, tempo = sim.simulacao(1, 0, 10, 0.5)
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 

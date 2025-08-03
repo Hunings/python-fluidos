@@ -41,9 +41,11 @@ def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Paredes Duto Neumann homogênea
-    p[:bfs_x+1, :bfs_y+1] = p[bfs_x+1, bfs_y+1] #Qualquer valor não deve interferir no resto da simulação
     p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
     p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
+    #Interior
+    p[bfs_x, bfs_y] = (p[bfs_x+1, bfs_y]+p[bfs_x, bfs_y+1])/2
+    p[:bfs_x, :bfs_y] = p[bfs_x, bfs_y]
     return p
 def condicoes_contorno_velocidades_bfs(u, v):
     #Paredes No-Slip
@@ -52,14 +54,20 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[:, -1] = 0 # Norte
     v[:, -1] = 0
     #Entrada Dirichlet
-    u[0, bfs_y:-1] = 1. # Oeste
-    v[0, bfs_y:-1] = 0.
+    u[0, bfs_y+1:-1] = 1. # Oeste
+    v[0, bfs_y+1:-1] = 0.
     #Saída Neumann homogênea
-    u[-1, :] = u[-2, :] # Leste
-    v[-1, :] = v[-2, :]
+    u[-1, 1:-1] = u[-2, 1:-1] # Leste
+    v[-1, 1:-1] = v[-2, 1:-1]
     #Velocidade no interior da borda
     u[:bfs_x+1, :bfs_y+1] = 0
     v[:bfs_x+1, :bfs_y+1] = 0
+    #Velocidade na borda
+    u[:bfs_x+1, bfs_y] = 0
+    u[bfs_x, :bfs_y+1] = 0
+
+    v[:bfs_x+1, bfs_y] = 0
+    v[bfs_x, :bfs_y+1] = 0
     return u, v
 def condicoes_contorno_velocidades_obs(u, v):
     #Paredes No-Slip
