@@ -80,8 +80,8 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[bfs_x, :bfs_y+1] = -u[bfs_x+1, :bfs_y+1]
     v[bfs_x, :bfs_y+1] = 0
     #Interior do ressalto
-    u[:bfs_x, :bfs_y] = 0
-    v[:bfs_x, :bfs_y] = 0
+    u[:bfs_x+1, :bfs_y+1] = 0
+    v[:bfs_x+1, :bfs_y+1] = 0
     return u, v
 def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
@@ -142,15 +142,12 @@ def simulacao(u0, v0, p0, tau):
     X, Y = malha(comprimento, altura, nx, ny)
     continuar = input("Quer carregar dados? [Digite 1 para sim]")
     if continuar:
-        u, v, p = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
+        u, v, p = np.zeros((nx, ny+1)), np.zeros((nx+1, ny)), np.zeros((nx+1, ny+1))
         u, v, p = carregar(u, v, p)
     else:
         u = u0*np.ones((nx, ny+1))
         v = v0*np.ones((nx+1, ny))
         p = p0*np.ones((nx+1, ny+1))
-    u = u0*np.ones((nx, ny+1)) # 7x6
-    v = v0*np.ones((nx+1, ny)) #8x5
-    p = p0*np.ones((nx+1, ny+1)) #8x6
 
     u, v = condicoes_contorno_velocidades(u, v)
     p = condicoes_contorno_pressao(p)
@@ -161,7 +158,7 @@ def simulacao(u0, v0, p0, tau):
     dpdx, dpdy = np.zeros_like(u), np.zeros_like(v)
 
     t=0
-    plotar_evolucao = bool(input('Digite algo, infeliz!'))
+    plotar_evolucao = bool(input('Plotar evolução temporal? [Digite 1 para sim]'))
     for it in range(passos_tempo):
         gamma = 0.1
         print(gamma)
@@ -228,10 +225,12 @@ def simulacao(u0, v0, p0, tau):
         u_maximo = np.max(u[1:-1, 1:-1])
         v_maximo = np.max(v[1:-1, 1:-1])
         print('It:', it, '/', passos_tempo, f"t = {t:.3} / {t_final}", '||u|| =', u_maximo, '||v|| =', v_maximo, 'Norma-L2 =', normal2)
-        um, vm = (u[:, :-1] + u[:, 1:])/2, (v[1:, :] + v[:-1, :])/2
-        V = (um**2+vm**2)**(1/2)
-        pm = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
+        u_vert, v_vert = (u[:, :-1] + u[:, 1:])/2, (v[1:, :] + v[:-1, :])/2
+        V = (u_vert**2+v_vert**2)**(1/2)
+        p_vert = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
         if plotar_evolucao and it % plotar_a_cada == 0:
+            #plt.plot(X[:bfs_x+1, bfs_y], Y[:bfs_x+1, bfs_y], c='w')
+            #plt.plot(X[bfs_x, :bfs_y+1], Y[bfs_x, :bfs_y+1], c='w')
             plt.contourf(X, Y, V, levels=100, cmap='jet')
             plt.colorbar()
             plt.draw()
@@ -239,6 +238,6 @@ def simulacao(u0, v0, p0, tau):
             plt.clf()
     fim = perf_counter()
     tempo = fim - inicio
-    salvar(um, vm, pm)
+    salvar(u, v, p)
     plt.show()
-    return X, Y, um, vm, V, pm, tempo
+    return X, Y, u_vert, v_vert, V, p_vert, tempo

@@ -2,19 +2,20 @@ import simulacao_staggered as sim
 import matplotlib.pyplot as plt
 
 #Define as constantes da simulação
-sim.comprimento = 20
-sim.altura = 1
-sim.nx = 201
-sim.ny = 41
+sim.comprimento = 35
+sim.altura = 2
+sim.nx = 351
+sim.ny = 21
 sim.Re = 800
 u_max = 2
 v_max = 2
-tau = 0.4
+tau = 0.2
 sim.t_final = 60
 sim.it_pressao = 200
 sim.plotar_a_cada = 10
-sim.bfs_x = int((sim.nx-1)/6)
+sim.bfs_x = int((sim.nx-1)/7)
 sim.bfs_y = int((sim.ny-1)/2)  
+tol = 1e-3
 
 sim.condicoes_contorno_velocidades = sim.condicoes_contorno_velocidades_bfs
 sim.condicoes_contorno_pressao = sim.condicoes_contorno_pressao_bfs
