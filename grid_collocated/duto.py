@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 #Define as constantes da simulação
 comprimento = 20
 altura = 1
-nx = 200
-ny = 100
+nx = 201
+ny = 31
 Re = 10
 u_max = 2
 v_max = 2
 tau = 0.1
 t_final = 6
-tol = 1e-5
-it_pressao = 1500
+tol = 1e-2
+it_pressao = 200
 plotar_a_cada = 100
 u0, v0, p0 = 1, 0, 0
 

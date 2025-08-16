@@ -3,19 +3,19 @@ import matplotlib.pyplot as plt
 
 comprimento = 1
 altura = 1
-nx = 128
-ny = 128
-Re = 1000
+nx = 51
+ny = 51
+Re = 1
 u_max = 1
 v_max = 1
-tau = 0.1
-t_final = 10
+tau = 0.01
+t_final = 0.01
 
-tol = 1e-3
+tol = 1e-2
 it_pressao = 100
 plotar_a_cada = 10
 
-u0 = 0
+u0 = 1
 v0 = p0 = 0
 
 s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_cav

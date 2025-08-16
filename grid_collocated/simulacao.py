@@ -41,8 +41,9 @@ def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
     p[0, :] = p[1, :] #Oeste
     #Paredes Duto Neumann homogênea
-    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
     p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
+    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
+    p[-1, :] = 0
     #Interior
     p[bfs_x, bfs_y] = (p[bfs_x+1, bfs_y]+p[bfs_x, bfs_y+1])/2
     p[:bfs_x, :bfs_y] = p[bfs_x, bfs_y]
@@ -62,12 +63,6 @@ def condicoes_contorno_velocidades_bfs(u, v):
     #Velocidade no interior da borda
     u[:bfs_x+1, :bfs_y+1] = 0
     v[:bfs_x+1, :bfs_y+1] = 0
-    #Velocidade na borda
-    u[:bfs_x+1, bfs_y] = 0
-    u[bfs_x, :bfs_y+1] = 0
-
-    v[:bfs_x+1, bfs_y] = 0
-    v[bfs_x, :bfs_y+1] = 0
     return u, v
 def condicoes_contorno_velocidades_obs(u, v):
     #Paredes No-Slip
@@ -154,7 +149,7 @@ def condicoes_contorno_velocidades_cav(u, v):
     return u, v
 def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
     j = 0
-    deltap = normal2 = 1
+    normal2 = 10
     while j < it_pressao and normal2 > tol:
             #Atualiza pressão iterativamente
             p_novo[1:-1, 1:-1] = (
@@ -167,13 +162,12 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
             p_novo = condicoes_contorno_pressao_duto(p_novo)
 
             #Calcula medidas do erro
-            deltap = np.max(abs(p-p_novo))
-            normal2 = np.linalg.norm(p-p_novo, ord=np.inf)/np.linalg.norm(p_novo)
+            normal2 = np.linalg.norm(p[1:-1, 1:-1]-p_novo[1:-1, 1:-1], ord=2)
 
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
-    return p, deltap, normal2
+    return p, normal2
 def malha(comprimento, altura, nx, ny):
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
@@ -219,8 +213,8 @@ def plotar_vetores(X, Y, u, v, V, Re, t_final, escala, step, quadrado):
     plt.colorbar(orientation='horizontal')
     plt.show()  
     return
-def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2):
-    print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, '|∆p| =', deltap, 'Norma-L2 =', normal2)
+def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, fonte):
+    print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, 'Norma-L2 =', normal2, 'DU =', np.sum(fonte))
     return
 def evolucao(X, Y, V):
     plt.contourf(X, Y, V, levels=100, cmap='jet')
@@ -253,7 +247,6 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         u = u0*np.ones((nx, ny))
         v = v0*np.ones((nx, ny))
         p = p0*np.ones((nx, ny))
-        iteracao_anterior = 0
     # Arrays 
     u_, v_ = np.zeros((nx, ny)), np.zeros((nx, ny))
     u_novo, v_novo = np.zeros((nx, ny)), np.zeros((nx, ny))
@@ -261,6 +254,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     conveccao_x, conveccao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
     dpdx, dpdy = np.zeros((nx, ny)), np.zeros((nx, ny))
     fonte = np.zeros((nx, ny))
+    divgradp = np.zeros((nx, ny))
 
     u, v = condicoes_contorno_velocidades_duto(u, v)
     p = condicoes_contorno_pressao_duto(p)
@@ -297,29 +291,32 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         u_, v_ = condicoes_contorno_velocidades_duto(u_, v_)
 
         fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
-
         # Resolve a Pressão iterativamente
         p_novo = np.copy(p)
-
-        p_novo, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
+        p_novo, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
        
+        divgradp[1:-1, 1:-1] = ((dpdx[2:, 1:-1] - dpdx[:-2, 1:-1])/dx + (dpdy[1:-1, 2:] - dpdy[1:-1, :-2])/dy)
+
+        #residuo = np.linalg.norm(fonte[1:-1, 1:-1] - divgradp[1:-1, 1:-1], ord=2)/np.linalg.norm(fonte[1:-1, 1:-1])
+        #print(residuo)
+
         u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
         v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
 
         # Condições de Contorno Velocidades Finais
-        u, v = condicoes_contorno_velocidades_duto(u, v)
+        u_novo, v_novo = condicoes_contorno_velocidades_duto(u_novo, v_novo)
 
-        u, v, p = u_novo, v_novo, p_novo
+        u[:], v[:], p[:] = u_novo, v_novo, p_novo
 
         tempo_transcorrido += dt
 
         V = (u**2 + v**2)**(0.5)
         V_max = np.max(V)
 
-        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, deltap, normal2)
+        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, fonte)
 
         if V_max > 50 or np.isnan(V_max):
             break

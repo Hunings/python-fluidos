@@ -10,11 +10,11 @@ Re = 1
 tau = 0.1
 u_max = 5
 v_max = 5
-tol = 1e-4
+tol = 1e-5
 t_final = 1
-bfs_x = int((nx-1)/6)
+bfs_x = int((nx-1)/2)
 bfs_y = int((ny-1)/2)  
-it_pressao = 100
+it_pressao = 300
 plotar_a_cada = 1000   
 
 def salvar(u, v, p):
@@ -65,23 +65,23 @@ def condicoes_contorno_V_cavidade(u, v):
 def condicoes_contorno_velocidades_bfs(u, v):
     #Condições de entrada
     u[0, bfs_y+1:-1] = 1.0 #Oeste
-    v[0, bfs_y+1:-1] = -v[1, bfs_y+1]
+    v[0, bfs_y+1:-1] = -v[1, bfs_y+1:-1]
     #Condições na parede
     u[:, -1] = -u[:, -2] #Norte
     v[:, -1] = 0
-    u[:, 0] = -u[:, 1] #Sul
-    v[:, 0] = 0
+    u[bfs_x+1:-1, 0] = -u[bfs_x+1:-1, 1] #Sul
+    v[bfs_x+1:-1, 0] = 0
     #Saída
     u[-1, 1:-1] = u[-2, 1:-1]
     v[-1, 1:-1] = v[-2, 1:-1]
     #Ressalto
-    u[:bfs_x+1, bfs_y] = -u[:bfs_x+1, bfs_y+1] #Parte de cima do ressalto
-    v[:bfs_x+1, bfs_y] = 0
-    u[bfs_x, :bfs_y+1] = -u[bfs_x+1, :bfs_y+1]
-    v[bfs_x, :bfs_y+1] = 0
+    u[:bfs_x+1, bfs_y+1] = -u[:bfs_x+1, bfs_y+2] #Parte de cima do ressalto
+    v[:bfs_x+1, bfs_y+1] = 0.
+    u[bfs_x+2, :bfs_y] = 0. #Parte lateral do ressalto
+    v[bfs_x+2, :bfs_y] = -v[bfs_x+3, :bfs_y]
     #Interior do ressalto
-    u[:bfs_x+1, :bfs_y+1] = 0
-    v[:bfs_x+1, :bfs_y+1] = 0
+    u[:bfs_x+2, :bfs_y+2] = 0.  
+    v[:bfs_x+2, :bfs_y+2] = 0.
     return u, v
 def condicoes_contorno_pressao_bfs(p):
     p[:, 0] = p[:, 1] #Sul
@@ -89,22 +89,19 @@ def condicoes_contorno_pressao_bfs(p):
     p[-1, :] = p[-2, :] #Leste
     p[0, :] = p[1, :] #Oeste
     #Ressalto
-    p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1]
-    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1]
+    p[1:bfs_x, bfs_y-1] = p[1:bfs_x, bfs_y]
+    p[bfs_x-1, 1:bfs_y] = p[bfs_x, 1:bfs_y]
     return p
+def mascara_bfs(mascara, bfs_x, bfs_y):
+    mascara[:bfs_x, :bfs_y] = 0
+    return mascara
 def condicoes_contorno_pressao(p):
     p[:, 0] = p[:, 1] #Sul
     p[:, -1] = p[:, -2] #Norte
     p[-1, :] = p[-2, :] #Leste
     p[0, :] = p[1, :] #Oeste
     return p
-def condicoes_contorno_pressao_bfs(p):
-    p[:, 0] = p[:, 1] #Sul
-    p[:, -1] = p[:, -2] #Norte
-    p[-1, :] = p[-2, :] #Leste
-    p[0, :] = p[1, :] #Oeste
-    return p
-def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
+def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, mascara):
     j = 0
     deltap = normal2 = 1
     while j < it_pressao and normal2 > tol:
@@ -160,7 +157,7 @@ def simulacao(u0, v0, p0, tau):
     t=0
     plotar_evolucao = bool(input('Plotar evolução temporal? [Digite 1 para sim]'))
     for it in range(passos_tempo):
-        gamma = 0.1
+        gamma = 0.5
         print(gamma)
         difusao_x = 1/Re * ( # 5x4 nesse caso
             (u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1])/dx**2
@@ -206,9 +203,11 @@ def simulacao(u0, v0, p0, tau):
 
         fonte[1:-1, 1:-1] = ((u_[1:, 1:-1] - u_[:-1, 1:-1])/dx + (v_[1:-1, 1:] - v_[1:-1, :-1])/dy)/dt #6x4
         
-        p_novo = np.copy(p) # pressão é 8x6
+        p_novo = np.copy(p)
 
-        p_novo, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
+        mascara = np.ones_like(p)
+        mascara = mascara_bfs(mascara, bfs_x, bfs_y)
+        p_novo, deltap, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, mascara)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:-1, 1:-1] - p_novo[1:-2, 1:-1])/(dx) #7x6
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:-1] - p_novo[1:-1, 1:-2])/(dy) #8x5
@@ -221,7 +220,8 @@ def simulacao(u0, v0, p0, tau):
         u[:], v[:], p[:] = u_novo, v_novo, p_novo
         
         t += dt
-
+        print(np.max(np.abs(u[bfs_x, bfs_y])))  # deveria ser zero
+        print(np.max(np.abs(v[bfs_x, bfs_y])))  # idem
         u_maximo = np.max(u[1:-1, 1:-1])
         v_maximo = np.max(v[1:-1, 1:-1])
         print('It:', it, '/', passos_tempo, f"t = {t:.3} / {t_final}", '||u|| =', u_maximo, '||v|| =', v_maximo, 'Norma-L2 =', normal2)
@@ -229,13 +229,14 @@ def simulacao(u0, v0, p0, tau):
         V = (u_vert**2+v_vert**2)**(1/2)
         p_vert = (p_novo[:-1, 1:] + p_novo[1:, 1:] + p_novo[:-1, :-1] + p_novo[1:, :-1])/4
         if plotar_evolucao and it % plotar_a_cada == 0:
-            #plt.plot(X[:bfs_x+1, bfs_y], Y[:bfs_x+1, bfs_y], c='w')
-            #plt.plot(X[bfs_x, :bfs_y+1], Y[bfs_x, :bfs_y+1], c='w')
+            plt.plot(X[:bfs_x+1, bfs_y], Y[:bfs_x+1, bfs_y], c='w')
+            plt.plot(X[bfs_x, :bfs_y+1], Y[bfs_x, :bfs_y+1], c='w')
             plt.contourf(X, Y, V, levels=100, cmap='jet')
             plt.colorbar()
             plt.draw()
-            plt.pause(0.1)
+            plt.pause(0.01)
             plt.clf()
+
     fim = perf_counter()
     tempo = fim - inicio
     salvar(u, v, p)
