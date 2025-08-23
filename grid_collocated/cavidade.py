@@ -5,14 +5,14 @@ comprimento = 1
 altura = 1
 nx = 51
 ny = 51
-Re = 1
+Re = 10
 u_max = 1
 v_max = 1
 tau = 0.01
-t_final = 0.01
+t_final = 0.1
 
-tol = 1e-2
-it_pressao = 100
+tol = 1e-3
+it_pressao = 300
 plotar_a_cada = 10
 
 u0 = 1
@@ -26,6 +26,6 @@ print(f"Tempo de execução: {(tempo):2f} segundos")
 
 #Visualização 
 
-s.plotar_contorno(X, Y, V, Re, t_final, 'Módulo da Velocidade', True)
+s.plotar_contorno(X, Y, V, Re, t_final, nx, ny, comprimento, altura, tau, it_pressao,  'Módulo da Velocidade', True)
 s.plotar_streamlines(X, Y, u, v, V, Re, t_final, True)
 s.plotar_vetores(X, Y, u, v, V, Re, t_final, 60, 1, True)

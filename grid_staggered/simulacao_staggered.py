@@ -63,34 +63,35 @@ def condicoes_contorno_V_cavidade(u, v):
     u[0, :-1] = 0 # No-slip
     return u, v
 def condicoes_contorno_velocidades_bfs(u, v):
+    u[:bfs_x, :bfs_y] = 0.  
+    v[:bfs_x, :bfs_y] = 0.
     #Condições de entrada
     u[0, bfs_y+1:-1] = 1.0 #Oeste
     v[0, bfs_y+1:-1] = -v[1, bfs_y+1:-1]
     #Condições na parede
     u[:, -1] = -u[:, -2] #Norte
     v[:, -1] = 0
-    u[bfs_x+1:-1, 0] = -u[bfs_x+1:-1, 1] #Sul
-    v[bfs_x+1:-1, 0] = 0
+    u[bfs_x+1:, 0] = -u[bfs_x+1, 1] #Sul
+    v[bfs_x+1:, 0] = 0
     #Saída
     u[-1, 1:-1] = u[-2, 1:-1]
     v[-1, 1:-1] = v[-2, 1:-1]
     #Ressalto
-    u[:bfs_x+1, bfs_y+1] = -u[:bfs_x+1, bfs_y+2] #Parte de cima do ressalto
-    v[:bfs_x+1, bfs_y+1] = 0.
-    u[bfs_x+2, :bfs_y] = 0. #Parte lateral do ressalto
-    v[bfs_x+2, :bfs_y] = -v[bfs_x+3, :bfs_y]
+    u[:bfs_x+1, bfs_y] = -u[:bfs_x+1, bfs_y+1] #Parte de cima do ressalto
+    v[:bfs_x+1, bfs_y] = 0.
+    u[bfs_x, :bfs_y+1] = 0. #Parte lateral do ressalto
+    v[bfs_x, :bfs_y+1] = -v[bfs_x+1, :bfs_y+1]
     #Interior do ressalto
-    u[:bfs_x+2, :bfs_y+2] = 0.  
-    v[:bfs_x+2, :bfs_y+2] = 0.
     return u, v
 def condicoes_contorno_pressao_bfs(p):
-    p[:, 0] = p[:, 1] #Sul
-    p[:, -1] = p[:, -2] #Norte
-    p[-1, :] = p[-2, :] #Leste
-    p[0, :] = p[1, :] #Oeste
+    p[bfs_x+1:, 0] = p[bfs_x+1:, 1] #Sul
+    p[1:-1, -1] = p[1:-1, -2] #Norte
+    p[-1, 1:-1] = p[-2, 1:-1] #Leste
+    p[0, bfs_y+1:-1] = p[1, bfs_y+1:-1] #Oeste
     #Ressalto
-    p[1:bfs_x, bfs_y-1] = p[1:bfs_x, bfs_y]
-    p[bfs_x-1, 1:bfs_y] = p[bfs_x, 1:bfs_y]
+    p[1:bfs_x+1, bfs_y] = p[1:bfs_x+1, bfs_y+1]
+    p[bfs_x, 1:bfs_y+1] = p[bfs_x+1, 1:bfs_y+1]
+    p[-1, 0] = 0
     return p
 def mascara_bfs(mascara, bfs_x, bfs_y):
     mascara[:bfs_x, :bfs_y] = 0

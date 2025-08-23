@@ -20,6 +20,8 @@ bfs_x = 0
 bfs_y = 0
 tam_obs = 10
 
+
+
 def salvar(u, v, p, it):
     query = input('Quer salvar? [Digite 1 para sim]')
     if query:
@@ -43,7 +45,7 @@ def condicoes_contorno_pressao_bfs(p):
     #Paredes Duto Neumann homogênea
     p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
     p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
-    p[-1, :] = 0
+    #p[-1, 0] = 0
     #Interior
     p[bfs_x, bfs_y] = (p[bfs_x+1, bfs_y]+p[bfs_x, bfs_y+1])/2
     p[:bfs_x, :bfs_y] = p[bfs_x, bfs_y]
@@ -147,9 +149,34 @@ def condicoes_contorno_velocidades_cav(u, v):
     u[1:-1, -1] = 1. #Norte
     v[:, -1] = 0.
     return u, v
-def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
+def pressao_gauss_seidel(fonte, p, dx, dy, it_pressao, tol, residuo, nx, ny):
+  c = 0
+  normal2 = 1
+  denominador = (2 * (dx**2 + dy**2))
+  while (normal2 > tol) and (c < it_pressao):
+      c += 1
+      p_old = np.copy(p)
+      for i in range(1, nx-1): #
+          for j in range(1, ny-1):
+                  p[i, j] = ((dy**2 * (p[i+1, j] + p[i-1, j]) +
+                              dx**2 * (p[i, j+1] + p[i, j-1]) -
+                              dx**2 * dy**2 * fonte[i, j]) /
+                            denominador)
+      p = condicoes_contorno_pressao_duto(p)
+      residuo[:] = ((p_old[2:,1:-1] - 2*p_old[1:-1,1:-1] + p_old[:-2,1:-1]) 
+                / 
+                dx**2
+                +
+                (p_old[1:-1,2:] - 2*p_old[1:-1,1:-1] + p_old[1:-1,:-2]) 
+                / 
+                dy**2
+                ) - fonte[1:-1, 1:-1]
+      normal2 = np.linalg.norm(residuo, ord=np.inf)/np.linalg.norm(fonte[1:-1, 1:-1], ord=np.inf)
+  return p, normal2
+def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
     j = 0
-    normal2 = 10
+    normal2 = 1
+    denominador = (2 * (dx**2 + dy**2))
     while j < it_pressao and normal2 > tol:
             #Atualiza pressão iterativamente
             p_novo[1:-1, 1:-1] = (
@@ -157,12 +184,20 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol):
               +
               (dx**2 * (p[1:-1, 2:] + p[1:-1, :-2]))
               -
-              (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/(2 * (dx**2 + dy**2))
+              (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/denominador
             #Condições de Contorno Pressão
             p_novo = condicoes_contorno_pressao_duto(p_novo)
-
+            residuo[:] = ((p_novo[2:,1:-1] - 2*p_novo[1:-1,1:-1] + p_novo[:-2,1:-1]) 
+                / 
+                dx**2
+                +
+                (p_novo[1:-1,2:] - 2*p_novo[1:-1,1:-1] + p_novo[1:-1,:-2]) 
+                / 
+                dy**2
+                ) - fonte[1:-1, 1:-1]
+            
             #Calcula medidas do erro
-            normal2 = np.linalg.norm(p[1:-1, 1:-1]-p_novo[1:-1, 1:-1], ord=2)
+            normal2 = np.linalg.norm(residuo, ord=np.inf)/np.linalg.norm(fonte[1:-1, 1:-1], ord=np.inf)
 
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
@@ -174,7 +209,7 @@ def malha(comprimento, altura, nx, ny):
     X, Y = np.meshgrid(x, y)
     X, Y = np.transpose(X), np.transpose(Y)
     return X, Y
-def plotar_contorno(X, Y, V, Re, t_final, titulo, quadrado):
+def plotar_contorno(X, Y, V, Re, t_final, nx, ny, comprimento, altura, tau, it_pressao, titulo, quadrado):
     if not quadrado:
         c, a = 15, 2
     else:
@@ -183,7 +218,7 @@ def plotar_contorno(X, Y, V, Re, t_final, titulo, quadrado):
     plt.contourf(X, Y, V, levels=200, cmap='jet')
     plt.xlabel('X')
     plt.ylabel('Y')
-    plt.title(f"{titulo}, Re = {Re}, t = {t_final}")
+    plt.title(f"{titulo}, Re = {Re}, t = {t_final}, ({comprimento} x {altura}), ({nx} x {ny}) pontos")
     plt.colorbar(orientation='horizontal')
     plt.show()
     return
@@ -213,8 +248,8 @@ def plotar_vetores(X, Y, u, v, V, Re, t_final, escala, step, quadrado):
     plt.colorbar(orientation='horizontal')
     plt.show()  
     return
-def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, fonte):
-    print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, 'Norma-L2 =', normal2, 'DU =', np.sum(fonte))
+def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2):
+    print('It:', i, '/', passos_tempo, f"t = {tempo_transcorrido:.3} / {t_final}", '||V|| =', V_max, 'Norma-L2 =', normal2)
     return
 def evolucao(X, Y, V):
     plt.contourf(X, Y, V, levels=100, cmap='jet')
@@ -254,7 +289,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     conveccao_x, conveccao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
     dpdx, dpdy = np.zeros((nx, ny)), np.zeros((nx, ny))
     fonte = np.zeros((nx, ny))
-    divgradp = np.zeros((nx, ny))
+    residuo = np.zeros((nx-2, ny-2))
 
     u, v = condicoes_contorno_velocidades_duto(u, v)
     p = condicoes_contorno_pressao_duto(p)
@@ -293,13 +328,12 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
         # Resolve a Pressão iterativamente
         p_novo = np.copy(p)
-        p_novo, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol)
+        p_novo, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
+        #p_novo, normal2 = pressao_gauss_seidel(fonte, p, dx, dy, it_pressao, tol, residuo, nx, ny)
 
         dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
         dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
        
-        divgradp[1:-1, 1:-1] = ((dpdx[2:, 1:-1] - dpdx[:-2, 1:-1])/dx + (dpdy[1:-1, 2:] - dpdy[1:-1, :-2])/dy)
-
         #residuo = np.linalg.norm(fonte[1:-1, 1:-1] - divgradp[1:-1, 1:-1], ord=2)/np.linalg.norm(fonte[1:-1, 1:-1])
         #print(residuo)
 
@@ -316,7 +350,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         V = (u**2 + v**2)**(0.5)
         V_max = np.max(V)
 
-        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, fonte)
+        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2)
 
         if V_max > 50 or np.isnan(V_max):
             break
