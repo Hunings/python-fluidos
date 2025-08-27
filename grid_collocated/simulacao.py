@@ -45,7 +45,6 @@ def condicoes_contorno_pressao_bfs(p):
     #Paredes Duto Neumann homogênea
     p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
     p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
-    #p[-1, 0] = 0
     #Interior
     p[bfs_x, bfs_y] = (p[bfs_x+1, bfs_y]+p[bfs_x, bfs_y+1])/2
     p[:bfs_x, :bfs_y] = p[bfs_x, bfs_y]
@@ -149,30 +148,6 @@ def condicoes_contorno_velocidades_cav(u, v):
     u[1:-1, -1] = 1. #Norte
     v[:, -1] = 0.
     return u, v
-def pressao_gauss_seidel(fonte, p, dx, dy, it_pressao, tol, residuo, nx, ny):
-  c = 0
-  normal2 = 1
-  denominador = (2 * (dx**2 + dy**2))
-  while (normal2 > tol) and (c < it_pressao):
-      c += 1
-      p_old = np.copy(p)
-      for i in range(1, nx-1): #
-          for j in range(1, ny-1):
-                  p[i, j] = ((dy**2 * (p[i+1, j] + p[i-1, j]) +
-                              dx**2 * (p[i, j+1] + p[i, j-1]) -
-                              dx**2 * dy**2 * fonte[i, j]) /
-                            denominador)
-      p = condicoes_contorno_pressao_duto(p)
-      residuo[:] = ((p_old[2:,1:-1] - 2*p_old[1:-1,1:-1] + p_old[:-2,1:-1]) 
-                / 
-                dx**2
-                +
-                (p_old[1:-1,2:] - 2*p_old[1:-1,1:-1] + p_old[1:-1,:-2]) 
-                / 
-                dy**2
-                ) - fonte[1:-1, 1:-1]
-      normal2 = np.linalg.norm(residuo, ord=np.inf)/np.linalg.norm(fonte[1:-1, 1:-1], ord=np.inf)
-  return p, normal2
 def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
     j = 0
     normal2 = 1
@@ -187,6 +162,7 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
               (dx**2 * dy**2 * fonte[1:-1, 1:-1]))/denominador
             #Condições de Contorno Pressão
             p_novo = condicoes_contorno_pressao_duto(p_novo)
+            p_novo[1:-1, 1:-1] = p_novo[1:-1, 1:-1] - p_novo[1, -3]
             residuo[:] = ((p_novo[2:,1:-1] - 2*p_novo[1:-1,1:-1] + p_novo[:-2,1:-1]) 
                 / 
                 dx**2
@@ -302,60 +278,63 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         else:
             plt.figure(figsize=(15,2))
     # Iteração 
-    for it in range(passos_tempo):
-        difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
-                                        (u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]) / dy**2)
-    
-        conveccao_x[1:-1, 1:-1] = (v[1:-1, 2:] * u[1:-1, 2:] - v[1:-1, :-2] * u[1:-1, :-2])/(2*dy) + (
-            u[2:, 1:-1]**2 - u[:-2, 1:-1]**2
-        )/(2*dx)
-    
-        # Velocidade u antes da correção da pressão
-        u_[1:-1, 1:-1] = u[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
-
-        difusao_y[1:-1, 1:-1] = 1/Re * ((v[2:, 1:-1] - 2*v[1:-1, 1:-1] + v[:-2, 1:-1]) / dx**2 +
-                                        (v[1:-1, 2:] - 2*v[1:-1, 1:-1] + v[1:-1, :-2]) / dy**2)
+    try:
+        for it in range(passos_tempo):
+            difusao_x[1:-1, 1:-1] = 1/Re * ((u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]) / dx**2 +
+                                            (u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]) / dy**2)
         
-        conveccao_y[1:-1, 1:-1] = (v[2:, 1:-1]*u[2:, 1:-1] - v[:-2, 1:-1]*u[:-2, 1:-1])/(2*dx) + (
-            v[1:-1, 2:]**2 - v[1:-1, :-2]**2
-        )/(2*dy)
+            conveccao_x[1:-1, 1:-1] = (v[1:-1, 2:] * u[1:-1, 2:] - v[1:-1, :-2] * u[1:-1, :-2])/(2*dy) + (
+                u[2:, 1:-1]**2 - u[:-2, 1:-1]**2
+            )/(2*dx)
         
-        #Velocidade v antes da correção da pressão
-        v_[1:-1, 1:-1] = v[1:-1, 1:-1] + dt*(difusao_y[1:-1, 1:-1] - conveccao_y[1:-1, 1:-1])
+            # Velocidade u antes da correção da pressão
+            u_[1:-1, 1:-1] = u[1:-1, 1:-1] + dt*(difusao_x[1:-1, 1:-1] - conveccao_x[1:-1, 1:-1])
 
-        u_, v_ = condicoes_contorno_velocidades_duto(u_, v_)
+            difusao_y[1:-1, 1:-1] = 1/Re * ((v[2:, 1:-1] - 2*v[1:-1, 1:-1] + v[:-2, 1:-1]) / dx**2 +
+                                            (v[1:-1, 2:] - 2*v[1:-1, 1:-1] + v[1:-1, :-2]) / dy**2)
+            
+            conveccao_y[1:-1, 1:-1] = (v[2:, 1:-1]*u[2:, 1:-1] - v[:-2, 1:-1]*u[:-2, 1:-1])/(2*dx) + (
+                v[1:-1, 2:]**2 - v[1:-1, :-2]**2
+            )/(2*dy)
+            
+            #Velocidade v antes da correção da pressão
+            v_[1:-1, 1:-1] = v[1:-1, 1:-1] + dt*(difusao_y[1:-1, 1:-1] - conveccao_y[1:-1, 1:-1])
 
-        fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
-        # Resolve a Pressão iterativamente
-        p_novo = np.copy(p)
-        p_novo, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
-        #p_novo, normal2 = pressao_gauss_seidel(fonte, p, dx, dy, it_pressao, tol, residuo, nx, ny)
+            u_, v_ = condicoes_contorno_velocidades_duto(u_, v_)
 
-        dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
-        dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
-       
-        #residuo = np.linalg.norm(fonte[1:-1, 1:-1] - divgradp[1:-1, 1:-1], ord=2)/np.linalg.norm(fonte[1:-1, 1:-1])
-        #print(residuo)
+            fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
+            # Resolve a Pressão iterativamente
+            p_novo = np.copy(p)
+            p_novo, normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
+            #p_novo, normal2 = pressao_gauss_seidel(fonte, p, dx, dy, it_pressao, tol, residuo, nx, ny)
 
-        u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
-        v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
+            dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
+            dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
+        
+            #residuo = np.linalg.norm(fonte[1:-1, 1:-1] - divgradp[1:-1, 1:-1], ord=2)/np.linalg.norm(fonte[1:-1, 1:-1])
+            #print(residuo)
 
-        # Condições de Contorno Velocidades Finais
-        u_novo, v_novo = condicoes_contorno_velocidades_duto(u_novo, v_novo)
+            u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
+            v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
 
-        u[:], v[:], p[:] = u_novo, v_novo, p_novo
+            # Condições de Contorno Velocidades Finais
+            u_novo, v_novo = condicoes_contorno_velocidades_duto(u_novo, v_novo)
 
-        tempo_transcorrido += dt
+            u[:], v[:], p[:] = u_novo, v_novo, p_novo
 
-        V = (u**2 + v**2)**(0.5)
-        V_max = np.max(V)
+            tempo_transcorrido += dt
 
-        informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2)
+            V = (u**2 + v**2)**(0.5)
+            V_max = np.max(V)
 
-        if V_max > 50 or np.isnan(V_max):
-            break
-        if plotar_evolucao and it % plotar_a_cada == 0:
-            evolucao(X, Y, V)
+            informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2)
+
+            if V_max > 50 or np.isnan(V_max):
+                break
+            if plotar_evolucao and it % plotar_a_cada == 0:
+                evolucao(X, Y, V)
+    except KeyboardInterrupt:
+        pass
     fim = perf_counter()
     tempo = fim - inicio
     salvar(u, v, p, it)

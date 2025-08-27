@@ -4,15 +4,15 @@ import numpy as np
 
 comprimento = 24
 altura = 2
-nx = 81
-ny = 21
-Re = 10
+nx = 80
+ny = 15
+Re = 200
 u_max = 1
 v_max = 1
-tau = 0.5
+tau = 0.2
 t_final = 10
-it_pressao = 100
-tol = 0.5
+it_pressao = 200
+tol = 0.1
 plotar_a_cada = 1
 s.bfs_x = int(nx/6)
 s.bfs_y = int(ny/2)  
