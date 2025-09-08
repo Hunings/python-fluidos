@@ -4,15 +4,15 @@ import numpy as np
 
 comprimento = 24
 altura = 2
-nx = 80
-ny = 15
-Re = 200
+nx = 150
+ny = 75
+Re = 100
 u_max = 1
 v_max = 1
-tau = 0.2
-t_final = 10
-it_pressao = 200
-tol = 0.1
+tau = 0.1
+t_final = 1500
+it_pressao = 300
+tol = 1e-4#1e-2
 plotar_a_cada = 1
 s.bfs_x = int(nx/6)
 s.bfs_y = int(ny/2)  
@@ -22,7 +22,7 @@ v0 = p0 = 0
 s.condicoes_contorno_pressao_duto = s.condicoes_contorno_pressao_bfs
 s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_bfs
 
-X, Y, u, v, p, velocidade_modulo, tempo, it = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
+X, Y, u, v, p, velocidade_modulo, tempo, x1r = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, forma='duto', caso='bfs')
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 
@@ -34,7 +34,7 @@ dvdx[1:-1, 1:-1] = (v[2:, 1:-1] - v[:-2, 1:-1] ) / (2*dx)
 dvdx[1:-1, 1:-1] = (v[1:-1, 2:] - v[1:-1, :-2] ) / (2*dy)
 w = 1/2 * (dvdx - dudy)
 
-s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final,  nx, ny, comprimento, altura, tau, it_pressao, 'Módulo da Velocidade', False)
-s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
+s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final,  nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Módulo da Velocidade', False)
+#s.plotar_streamlines(X, Y, u, v, velocidade_modulo, Re, t_final, False)
 #s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
-s.plotar_contorno(X, Y, p, Re, t_final, nx, ny, comprimento, altura, tau, it_pressao, 'Vorticidade',  False)
+#s.plotar_contorno(X, Y, w, Re, t_final, nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Vorticidade',  False)

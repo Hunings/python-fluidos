@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import simulacao as s
 
-nx = 200
-ny = 100
-comprimento = 20
-altura = 1
+nx = 80
+ny = 80
+comprimento = 24
+altura = 2
 
 u, v, p = np.zeros((nx, ny)), np.zeros((nx, ny)), np.zeros((nx, ny))
 
@@ -18,6 +18,7 @@ X, Y = np.meshgrid(x, y)
 X, Y, = X.T, Y.T
 
 plt.figure(figsize=(15, 2))
-plt.contourf(X, Y, u, levels=100, cmap='jet')
+v = (u**2 + v**2)**(0.5)
+plt.contourf(X, Y, v, levels=100, cmap='jet')
 plt.colorbar()
 plt.show()

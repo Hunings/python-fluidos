@@ -19,7 +19,7 @@ u0, v0, p0 = 1, 0, 0
 #Condições de contorno internas padrão
 
 #Executa a simulação
-X, Y, u, v, p, V, tempo, it = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
+X, Y, u, v, p, V, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0)
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 

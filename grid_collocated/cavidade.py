@@ -8,19 +8,19 @@ ny = 51
 Re = 10
 u_max = 1
 v_max = 1
-tau = 0.01
-t_final = 0.1
+tau = 0.5
+t_final = 100
 
 tol = 1e-3
 it_pressao = 300
 plotar_a_cada = 10
 
-u0 = 1
+u0 = 0
 v0 = p0 = 0
 
 s.condicoes_contorno_velocidades_duto = s.condicoes_contorno_velocidades_cav
 
-X, Y, u, v, p, V, tempo, it = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, 'quadrado')
+X, Y, u, v, p, V, tempo = s.simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, it_pressao, plotar_a_cada, u0, v0, p0, 'quadrado')
 
 print(f"Tempo de execução: {(tempo):2f} segundos")
 
