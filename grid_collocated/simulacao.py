@@ -14,13 +14,8 @@ aplicar as condições de contorno para velocidade e pressão.
 '''
 
 abertura = 0
-pos_obs_x = 0
-pos_obs_y = 0
 bfs_x = 0
 bfs_y = 0
-tam_obs = 10
-
-
 
 def salvar(u, v, p, it):
     query = input('Quer salvar? [Digite 1 para sim]')
@@ -51,7 +46,7 @@ def condicoes_contorno_pressao_bfs(p):
     p[0, :] = p[1, :] #Oeste
     #Paredes Duto Neumann homogênea
     p[:bfs_x+1, bfs_y] = p[:bfs_x+1, bfs_y+1] #Parede norte do ressalto
-    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1] #Parede leste do ressalto
+    p[bfs_x, :bfs_y+1] = p[bfs_x+1, :bfs_y+1]   #Parede leste do ressalto
     return p
 def condicoes_contorno_velocidades_bfs(u, v):
     #Paredes No-Slip
@@ -69,39 +64,9 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[:bfs_x+1, :bfs_y+1] = 0.
     v[:bfs_x+1, :bfs_y+1] = 0.
     Umax = 1.
-    y = np.linspace(0, 2)
-    u[0, bfs_y+1:-1] = Umax*(1-((y[bfs_y] - 1)**2))
+    y = np.linspace(0, 2, 75-bfs_y) # aqui ainda tenho que colocar altura e ny manualmente
+    u[0, bfs_y:] = Umax*(1-((y - 1)**2))
     return u, v
-def condicoes_contorno_velocidades_obs(u, v):
-    #Paredes No-Slip
-    u[:, -1] = 0 #Norte
-    v[:, -1] = 0
-    u[:, 0] = 0 #Sul
-    v[:, 0] = 0
-    # Entrada Dirichlet
-    u[0, 1:-1] = 1.0 #Oeste
-    v[0, 1:-1] = 0.0
-    # Saída Neumann homogênea
-    u[-1, 1:-1] = u[-2, 1:-1] #Leste
-    v[-1, 1:-1] = v[-2, 1:-1]
-    #Obstáculo No-Slip
-    u[pos_obs_x:pos_obs_x+8, pos_obs_y:pos_obs_y+8] = 0
-    v[pos_obs_x:pos_obs_x+8, pos_obs_y:pos_obs_y+8] = 0
-    return u, v
-def condicoes_contorno_pressao_obs(p):
-    #Paredes Neumann homogênea
-    p[-1, :] = p[-2, :] #Leste
-    p[:, -1] = p[:, -2] #Norte
-    p[:, 0] = p[:, 1] #Sul
-    p[0, :] = p[1, :] #Oeste
-    #Obstáculo Neumann
-    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y+tam_obs] = p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y+tam_obs+1] #Norte
-    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y] = p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y-1] #Sul
-    p[pos_obs_x, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x-1, pos_obs_y:pos_obs_y+tam_obs+1] #Oeste
-    p[pos_obs_x+tam_obs, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] #Leste
-    #Interior do obstáculo
-    p[pos_obs_x:pos_obs_x+tam_obs+1, pos_obs_y:pos_obs_y+tam_obs+1] = p[pos_obs_x+3, pos_obs_y+3]
-    return p
 def condicoes_contorno_velocidades_bif(u, v):
     #Paredes No-Slip
     u[:, 0] = 0 #Sul
@@ -137,8 +102,10 @@ def condicoes_contorno_velocidades_duto(u, v):
     u[:, -1] = 0 #Norte
     v[:, -1] = 0
     #Entrada Dirichlet
-    u[0, :] = 1. #Oeste
-    v[0, :] = 0.
+    Umax = 1.
+    y = np.linspace(0, 2, 31) # aqui ainda tenho que colocar altura e ny manualmente
+    u[0, bfs_y:] = Umax*(1-((y - 1)**2))
+    u[0, :] = 1.
     #Saída Neumann homogênea
     u[-1, :] = u[-2, :] #Leste
     v[-1, :] = v[-2, :]
@@ -172,7 +139,9 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
             
             #Calcula medidas do erro
             normal2 = np.linalg.norm(p[1:-1, 1:-1]-p_novo[1:-1, 1:-1], ord=2)
-
+            # residuo[:] = ((p_novo[2:,1:-1] - 2*p_novo[1:-1,1:-1] + p_novo[:-2,1:-1]) / dx**2 
+            #                       + (p_novo[1:-1,2:] - 2*p_novo[1:-1,1:-1] + p_novo[1:-1,:-2]) / dy**2) - fonte[1:-1, 1:-1]
+            # print(np.linalg.norm(residuo))
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
@@ -203,7 +172,6 @@ def pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
             normal2 = (np.linalg.norm(p[1:-1, bfs_y+1:-1] - p_novo[1:-1, bfs_y+1:-1], ord=2) 
             + 
             np.linalg.norm(p[bfs_x+1:-1, 1:bfs_y+1] - p_novo[bfs_x+1:-1, 1:bfs_y+1], ord=2))
-
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
@@ -227,31 +195,17 @@ def plotar_contorno(X, Y, V, Re, t_final, nx, ny, comprimento, altura, x1r, tau,
     plt.colorbar(orientation='horizontal')
     plt.show()
     return
-def plotar_streamlines(X, Y, u, v, V, Re, t_final, quadrado):
+def plotar_streamlines(X, Y, u, v, Re, t_final, nx, ny, comprimento, altura, x1r, tau, it_pressao, titulo, quadrado):
     if not quadrado:
         c, a = 15, 2
     else:
         c, a = 8, 12
     plt.figure(figsize=(c, a))
-    plt.streamplot(X.T, Y.T, u.T, v.T, color=V.T, cmap='jet')
+    plt.streamplot(X.T, Y.T, u.T, v.T, density=1, linewidth=0.5, color='k', broken_streamlines=False, arrowstyle='-')
     plt.xlabel('X')
     plt.ylabel('Y')
-    plt.title(f"Re = {Re}, t = {t_final}")
-    plt.colorbar(orientation='horizontal')
+    plt.title(rf"{titulo}, Re = {Re}, t = {t_final}, ({comprimento} x {altura}), ({nx} x {ny}) pontos, X/r = {x1r:.3f}, $\tau$ = {tau}, itp = {it_pressao}")
     plt.show()
-    return
-def plotar_vetores(X, Y, u, v, V, Re, t_final, escala, step, quadrado):
-    if not quadrado:
-        c, a = 15, 2
-    else:
-        c, a = 8, 12
-    plt.figure(figsize=(c, a))
-    plt.quiver(X[::step, ::step], Y[::step, ::step], u[::step, ::step], v[::step, ::step], V[::step, ::step], scale=escala, cmap='jet')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title(f"Re = {Re}, t = {t_final}")
-    plt.colorbar(orientation='horizontal')
-    plt.show()  
     return
 def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2):
     print('It=', i, '/', passos_tempo, f"t={tempo_transcorrido:.3}/{t_final}", '||V||=', V_max, 'NormaL²=', normal2, end=' ')
@@ -287,9 +241,8 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
         if caso == 'bfs':
             u = u0*np.zeros((nx, ny))
             Umax = 1.
-            y = np.linspace(0, altura)
-            #u[1:bfs_x+2, bfs_y+1:-1] = Umax*(1-((y[bfs_y] - 1)**2))
-            u[1:-1, bfs_y+1:-1] = 1.
+            y = np.linspace(0, altura, ny-bfs_y)
+            u[0, bfs_y:] = Umax*(1-((y - 1)**2))
             v = v0*np.ones((nx, ny))
             p = p0*np.ones((nx, ny))
         else:
@@ -341,18 +294,16 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
             u_[:], v_[:] = condicoes_contorno_velocidades_duto(u_, v_)
 
             fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
-
             p_novo = np.copy(p)
             if caso == 'bfs':
                 #fonte[1:-1, 1:-1] = ((u_[2:, 1:-1] - u_[:-2, 1:-1])/(2*dx) + (v_[1:-1, 2:] - v_[1:-1, :-2])/(2*dy))/dt
-                num_pontos = (nx-2)*(ny-2) - (bfs_x-2)*(bfs_y-2)
+                num_pontos = (nx-2)*(ny-2) - (bfs_x)*(bfs_y)
                 
                 int_up = fonte[1:-1, bfs_y+1:-1]
                 int_down = fonte[bfs_x+1:-1, 1:bfs_y+1]
                 mediaf = (np.sum(int_down)+np.sum(int_up))/num_pontos
                 fonte[1:-1, bfs_y+1:-1] += -mediaf
                 fonte[bfs_x+1:-1, 1:bfs_y+1] += -mediaf
-                print(mediaf, end=' ')
 
                 p_novo[:], normal2 = pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
                 
@@ -363,10 +314,14 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
                 dpdy[bfs_x+1:-1, 1:bfs_y+1] = (p_novo[bfs_x+1:-1, 2:bfs_y+2] - p_novo[bfs_x+1:-1, :bfs_y])/(2*dy)
 
             else:
+                num_pontos = (nx-2)*(ny-2)
+                mediaf = (np.sum(fonte[1:-1, 1:-1]))/num_pontos
+                fonte[1:-1, 1:-1] += -mediaf
                 p_novo[:], normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
 
                 dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
                 dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
+                
 
             u_novo[1:-1, 1:-1] = u_[1:-1, 1:-1] - dpdx[1:-1, 1:-1] * dt
             v_novo[1:-1, 1:-1] = v_[1:-1, 1:-1] - dpdy[1:-1, 1:-1] * dt
@@ -391,6 +346,8 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
                 if caso == 'bfs':
                     plt.plot(X[:bfs_x+1, bfs_y], Y[:bfs_x+1, bfs_y], c='w') # Horizontal
                     plt.plot(X[bfs_x, :bfs_y+1], Y[bfs_x, :bfs_y+1], c='w') #Vertical
+                    evolucao(X, Y, V)
+                else:
                     evolucao(X, Y, V)
     except KeyboardInterrupt:
         pass
