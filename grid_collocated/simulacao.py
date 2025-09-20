@@ -55,17 +55,15 @@ def condicoes_contorno_velocidades_bfs(u, v):
     u[:, -1] = 0. # Norte
     v[:, -1] = 0.
     #Entrada Dirichlet
-    u[0, bfs_y+1:-1] = 1. # Oeste
-    v[0, bfs_y+1:-1] = 0.
+    Umax = 1.
+    y = np.linspace(0, 2, 100-bfs_y) # aqui ainda tenho que colocar altura e ny manualmente
+    u[0, bfs_y:] = Umax*(1-((y - 1)**2))
     #Saída Neumann homogênea
     u[-1, 1:-1] = u[-2, 1:-1] # Leste
     v[-1, 1:-1] = v[-2, 1:-1]
     #Velocidade no interior da borda
     u[:bfs_x+1, :bfs_y+1] = 0.
     v[:bfs_x+1, :bfs_y+1] = 0.
-    Umax = 1.
-    y = np.linspace(0, 2, 75-bfs_y) # aqui ainda tenho que colocar altura e ny manualmente
-    u[0, bfs_y:] = Umax*(1-((y - 1)**2))
     return u, v
 def condicoes_contorno_velocidades_bif(u, v):
     #Paredes No-Slip
@@ -139,13 +137,12 @@ def pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
             
             #Calcula medidas do erro
             normal2 = np.linalg.norm(p[1:-1, 1:-1]-p_novo[1:-1, 1:-1], ord=2)
-            # residuo[:] = ((p_novo[2:,1:-1] - 2*p_novo[1:-1,1:-1] + p_novo[:-2,1:-1]) / dx**2 
-            #                       + (p_novo[1:-1,2:] - 2*p_novo[1:-1,1:-1] + p_novo[1:-1,:-2]) / dy**2) - fonte[1:-1, 1:-1]
-            # print(np.linalg.norm(residuo))
+            residuo[1:-1, 1:-1] = ((p_novo[2:,1:-1] - 2*p_novo[1:-1,1:-1] + p_novo[:-2,1:-1]) / dx**2 
+                                   + (p_novo[1:-1,2:] - 2*p_novo[1:-1,1:-1] + p_novo[1:-1,:-2]) / dy**2) - fonte[1:-1, 1:-1]
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
-    return p, normal2
+    return p, normal2, residuo
 def pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
     j = 0
     normal2 = 1
@@ -172,10 +169,14 @@ def pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo):
             normal2 = (np.linalg.norm(p[1:-1, bfs_y+1:-1] - p_novo[1:-1, bfs_y+1:-1], ord=2) 
             + 
             np.linalg.norm(p[bfs_x+1:-1, 1:bfs_y+1] - p_novo[bfs_x+1:-1, 1:bfs_y+1], ord=2))
+            residuo[1:-1, bfs_y+1:-1] = ((p_novo[2:, bfs_y+1:-1] - 2*p_novo[1:-1, bfs_y+1:-1] + p_novo[:-2, bfs_y+1:-1]) / dx**2 
+                                   + (p_novo[1:-1, bfs_y+2:] - 2*p_novo[1:-1, bfs_y+1:-1] + p_novo[1:-1, bfs_y:-2]) / dy**2) - fonte[1:-1, bfs_y+1:-1]
+            residuo[bfs_x+1:-1, 1:bfs_y+1] = ((p_novo[bfs_x+2:, 1:bfs_y+1] - 2*p_novo[bfs_x+1:-1, 1:bfs_y+1] + p_novo[bfs_x:-2, 1:bfs_y+1]) / dx**2 
+                                   + (p_novo[bfs_x+1:-1, 2:bfs_y+2] - 2*p_novo[bfs_x+1:-1, 1:bfs_y+1] + p_novo[bfs_x+1:-1, :bfs_y]) / dy**2) - fonte[bfs_x+1:-1, 1:bfs_y+1]
             #Atualiza pressão e avança na iteração
             p[:] = p_novo
             j+=1
-    return p, normal2
+    return p, normal2, residuo
 def malha(comprimento, altura, nx, ny):
     x = np.linspace(0.0, comprimento, nx)
     y = np.linspace(0.0, altura, ny)
@@ -201,14 +202,14 @@ def plotar_streamlines(X, Y, u, v, Re, t_final, nx, ny, comprimento, altura, x1r
     else:
         c, a = 8, 12
     plt.figure(figsize=(c, a))
-    plt.streamplot(X.T, Y.T, u.T, v.T, density=1, linewidth=0.5, color='k', broken_streamlines=False, arrowstyle='-')
+    plt.streamplot(X.T, Y.T, u.T, v.T, density=0.5, linewidth=0.5, color='k', broken_streamlines=False, arrowstyle='-')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.title(rf"{titulo}, Re = {Re}, t = {t_final}, ({comprimento} x {altura}), ({nx} x {ny}) pontos, X/r = {x1r:.3f}, $\tau$ = {tau}, itp = {it_pressao}")
     plt.show()
     return
-def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2):
-    print('It=', i, '/', passos_tempo, f"t={tempo_transcorrido:.3}/{t_final}", '||V||=', V_max, 'NormaL²=', normal2, end=' ')
+def informacoes(i, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, residuo):
+    print('It=', i, '/', passos_tempo, f"t={tempo_transcorrido:.3}/{t_final}", '||V||=', V_max, 'NormaL²=', normal2, '∇·u ', np.linalg.norm(residuo), end=' ')
     return
 def evolucao(X, Y, V):
     plt.contourf(X, Y, V, levels=100, cmap='jet')
@@ -256,7 +257,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
     conveccao_x, conveccao_y = np.zeros((nx, ny)), np.zeros((nx, ny))
     dpdx, dpdy = np.zeros((nx, ny)), np.zeros((nx, ny))
     fonte = np.zeros((nx, ny))
-    residuo = np.zeros((nx-2, ny-2))
+    residuo = np.zeros((nx, ny))
 
     u, v = condicoes_contorno_velocidades_duto(u, v)
     p = condicoes_contorno_pressao_duto(p)
@@ -305,7 +306,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
                 fonte[1:-1, bfs_y+1:-1] += -mediaf
                 fonte[bfs_x+1:-1, 1:bfs_y+1] += -mediaf
 
-                p_novo[:], normal2 = pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
+                p_novo[:], normal2, residuo[:] = pressao_bfs(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
                 
                 dpdx[1:-1, bfs_y+1:-1] = (p_novo[2:, bfs_y+1:-1] - p_novo[:-2, bfs_y+1:-1])/(2*dx)
                 dpdx[bfs_x+1:-1, 1:bfs_y+1] = (p_novo[bfs_x+2:, 1:bfs_y+1] - p_novo[bfs_x:-2, 1:bfs_y+1])/(2*dx)
@@ -317,7 +318,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
                 num_pontos = (nx-2)*(ny-2)
                 mediaf = (np.sum(fonte[1:-1, 1:-1]))/num_pontos
                 fonte[1:-1, 1:-1] += -mediaf
-                p_novo[:], normal2 = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
+                p_novo[:], normal2, residuo[:] = pressao(fonte, p, p_novo, dx, dy, it_pressao, tol, residuo)
 
                 dpdx[1:-1, 1:-1] = (p_novo[2:, 1:-1] - p_novo[:-2, 1:-1])/(2*dx)
                 dpdy[1:-1, 1:-1] = (p_novo[1:-1, 2:] - p_novo[1:-1, :-2])/(2*dy)
@@ -337,7 +338,7 @@ def simulacao(comprimento, altura, nx, ny, Re, tol, u_max, v_max, tau, t_final, 
             V_max = np.max(V)
 
             x1r = estima_x1r(u, X, bfs_x, dx)
-            informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2)
+            informacoes(it, passos_tempo, tempo_transcorrido, t_final, V_max, normal2, residuo)
             print(f"X/r={x1r}")
             
             if V_max > 2 or np.isnan(V_max):

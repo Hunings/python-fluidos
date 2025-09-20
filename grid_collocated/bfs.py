@@ -4,15 +4,15 @@ import numpy as np
 
 comprimento = 24
 altura = 2
-nx = 150
-ny = 75
-Re = 100
+nx = 300
+ny = 100
+Re = 500
 u_max = 1
 v_max = 1
 tau = 0.1
-t_final = 1500
-it_pressao = 600
-tol = 1e-4#1e-2
+t_final = 1500 #IMPLEMENTE AGORA O DIVERGENTE 
+it_pressao = 500
+tol = 1e-6#1e-2
 plotar_a_cada = 1
 s.bfs_x = int(nx/6)
 s.bfs_y = int(ny/2)  
@@ -33,8 +33,9 @@ dvdx, dudy = np.zeros_like(u), np.zeros_like(v)
 dvdx[1:-1, 1:-1] = (v[2:, 1:-1] - v[:-2, 1:-1] ) / (2*dx)
 dvdx[1:-1, 1:-1] = (v[1:-1, 2:] - v[1:-1, :-2] ) / (2*dy)
 w = 1/2 * (dvdx - dudy)
-
-s.plotar_contorno(X, Y, velocidade_modulo, Re, t_final,  nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Módulo da Velocidade', False)
-s.plotar_streamlines(X, Y, u, v, Re, t_final, nx, ny, comprimento, altura, x1r, tau, it_pressao, 'streamlines', False)
+    
+s.plotar_contorno(X, Y, u, Re, t_final,  nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Velocidade Horizontal', False)
+s.plotar_contorno(X, Y, v, Re, t_final,  nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Velocidade Vertical', False)
+s.plotar_streamlines(X, Y, u, v, Re, t_final, nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Streamlines', False)
 #s.plotar_vetores(X, Y, u, v, velocidade_modulo, Re, t_final, 100, 2, False)
 #s.plotar_contorno(X, Y, w, Re, t_final, nx, ny, comprimento, altura, x1r, tau, it_pressao, 'Vorticidade',  False)
